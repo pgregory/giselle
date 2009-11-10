@@ -52,12 +52,15 @@
            </widget>
            <widget class="QListView" name="listView_2"/>
           </widget>
-          <widget class="QTextEdit" name="textEdit">
+          <widget class="QTextEdit" name="mainEditor">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="tabStopWidth">
+            <number>20</number>
            </property>
           </widget>
          </widget>

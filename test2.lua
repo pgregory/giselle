@@ -1,8 +1,8 @@
 
 function createBlade(length, width, thickness)
 	blade = Model("blade")
-	function blade:body(time)
-		local left = - width / 2
+	blade:setBody(
+	[[	local left = - width / 2
 		local right = width / 2
 		local top = - thickness / 2
 		local bottom = thickness / 2
@@ -27,7 +27,7 @@ function createBlade(length, width, thickness)
 				Disk(bottom, width/2, 180)
 			TransformEnd()
 		TransformEnd()
-	end
+	]])
 	return blade
 end
 
@@ -39,7 +39,8 @@ scissor.bladewidth = 0.3
 scissor.bladethickness = 0.1
 scissor.blade = createBlade(scissor.bladelength, scissor.bladewidth, scissor.bladethickness)
 
-function scissor:body(time)
+scissor:setBody(
+[[
 	local minangle = (self.bladewidth / self.bladelength) * (180/math.pi)
 	local maxangle = 90 - minangle
 	for segment = 0, self.segments do
@@ -54,7 +55,7 @@ function scissor:body(time)
 		TransformEnd()
 		Translate(0, 0, offset)
 	end
-end
+]])
 
 theWorld = World()
 function theWorld:body(time)

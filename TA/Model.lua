@@ -16,6 +16,11 @@ function Model:avar(name, keyframes)
 	return o
 end
 
+function Model:setBody(string)
+	loadstring("self.body = function(time) "..string.."end")
+	self.bodySource = string
+end
+
 function Model:__call(name)
 	if type(name) ~= "string" then
 		error("Must specify a name for a model")

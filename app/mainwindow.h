@@ -3,6 +3,7 @@
 
 #include <QtGui/QMainWindow>
 #include <QtGui/QSplitter>
+#include <QtGui/QTextEdit>
 #include <QtCore/QProcess>
 
 struct lua_State;
@@ -23,6 +24,7 @@ public:
 private:
     Ui::MainWindow *ui;
     QSplitter* splitter;
+    QTextEdit* mainEditor;
 };
 
 #endif // MAINWINDOW_H
