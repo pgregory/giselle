@@ -6,6 +6,8 @@
 #include <QtGui/QTextEdit>
 #include <QtCore/QProcess>
 
+#include "luahighlighter.h"
+
 struct lua_State;
 
 namespace Ui
@@ -25,6 +27,7 @@ private:
     Ui::MainWindow *ui;
     QSplitter* splitter;
     QTextEdit* mainEditor;
+    LuaHighlighter* highlighter;
 };
 
 #endif // MAINWINDOW_H

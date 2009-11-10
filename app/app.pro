@@ -18,9 +18,11 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     avarlistmodel.cpp \
     scenetreemodel.cpp \
-    scenetreeitem.cpp
+    scenetreeitem.cpp \
+    luahighlighter.cpp
 HEADERS += mainwindow.h \
     avarlistmodel.h \
     scenetreemodel.h \
-    scenetreeitem.h
+    scenetreeitem.h \
+    luahighlighter.h
 FORMS += mainwindow.ui

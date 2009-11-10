@@ -34,6 +34,7 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
 
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
+    highlighter = new LuaHighlighter(mainEditor->document());
 
     // Now fill in the cameras from the Lua state.
     lua_getglobal(L, "Model");
