@@ -7,9 +7,10 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
 {
     HighlightingRule rule;
 
-    keywordFormat.setForeground(Qt::darkBlue);
-    keywordFormat.setFontWeight(QFont::Bold);
     QStringList keywordPatterns;
+
+    keywordFormat0.setForeground(Qt::darkBlue);
+    keywordFormat0.setFontWeight(QFont::Bold);
     keywordPatterns  << "\\band\\b" << "\\bbreak\\b" << "\\bdo\\b"
                      << "\\belse\\b" << "\\belseif\\b" << "\\bend\\b"
                      << "\\bfalse\\b" << "\\bfor\\b" << "\\bfunction\\b"
@@ -17,12 +18,39 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
                      << "\\bnil\\b" << "\\bnot\\b" << "\\bor\\b"
                      << "\\brepeat\\b" << "\\breturn\\b" << "\\bthen\\b"
                      << "\\btrue\\b" << "\\buntil\\b" << "\\bwhile\\b";
+    foreach (const QString &pattern, keywordPatterns)
+    {
+        rule.pattern = QRegExp(pattern);
+        rule.format = keywordFormat0;
+        highlightingRules.append(rule);
+    }
+
+    functionFormat.setFontItalic(true);
+    functionFormat.setForeground(Qt::blue);
+    rule.pattern = QRegExp("\\b[A-Za-z0-9_]+(?=\\()");
+    rule.format = functionFormat;
+    highlightingRules.append(rule);
+
+
+    keywordFormat1.setForeground(Qt::darkBlue);
+    keywordFormat1.setFontWeight(QFont::Bold);
+    keywordPatterns.clear();
     keywordPatterns  << "_VERSION" << "assert" << "collectgarbage"
                      << "dofile" << "error" << "gcinfo"
                      << "loadfile" << "loadstring" << "print"
                      << "rawget" << "rawset" << "require"
                      << "tonumber" << "tostring" << "type"
                      << "unpack";
+    foreach (const QString &pattern, keywordPatterns)
+    {
+        rule.pattern = QRegExp(pattern);
+        rule.format = keywordFormat1;
+        highlightingRules.append(rule);
+    }
+
+    keywordFormat2.setForeground(Qt::darkBlue);
+    keywordFormat2.setFontWeight(QFont::Bold);
+    keywordPatterns.clear();
     keywordPatterns  << "_G" << "getfenv" << "getmetatable"
                      << "ipairs" << "loadlib" << "next"
                      << "pairs" << "pcall" << "rawequal"
@@ -30,6 +58,17 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
                      << "string" << "table" << "math"
                      << "coroutine" << "io" << "os" << "debug"
                      << "load" << "module" << "select";
+    foreach (const QString &pattern, keywordPatterns)
+    {
+        rule.pattern = QRegExp(pattern);
+        rule.format = keywordFormat2;
+        highlightingRules.append(rule);
+    }
+
+
+    keywordFormat3.setForeground(Qt::darkBlue);
+    keywordFormat3.setFontWeight(QFont::Bold);
+    keywordPatterns.clear();
     keywordPatterns << "string.byte" << "string.char" << "string.dump" << "string.find" << "string.len"
                     << "string.lower" << "string.rep" << "string.sub" << "string.upper" << "string.format" << "string.gfind" << "string.gsub"
                     << "table.concat" << "table.foreach" << "table.foreachi" << "table.getn" << "table.sort" << "table.insert" << "table.remove" << "table.setn"
@@ -38,6 +77,17 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
                     << "math.pi" << "math.pow" << "math.rad" << "math.random" << "math.randomseed" << "math.sin" << "math.sqrt" << "math.tan"
                     << "string.gmatch" << "string.match" << "string.reverse" << "table.maxn"
                     << "math.cosh" << "math.fmod" << "math.modf" << "math.sinh" << "math.tanh" << "math.huge";
+    foreach (const QString &pattern, keywordPatterns)
+    {
+        rule.pattern = QRegExp(pattern);
+        rule.format = keywordFormat3;
+        highlightingRules.append(rule);
+    }
+
+
+    keywordFormat4.setForeground(Qt::darkBlue);
+    keywordFormat4.setFontWeight(QFont::Bold);
+    keywordPatterns.clear();
     keywordPatterns << "coroutine.create" << "coroutine.resume" << "coroutine.status"
                     << "coroutine.wrap" << "coroutine.yield"
                     << "io.close" << "io.flush" << "io.input" << "io.lines" << "io.open" << "io.output" << "io.read" << "io.tmpfile" << "io.type" << "io.write"
@@ -49,11 +99,10 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
                     << "debug.debug" << "debug.getfenv" << "debug.gethook" << "debug.getinfo" << "debug.getlocal"
                     << "debug.getmetatable" << "debug.getregistry" << "debug.getupvalue" << "debug.setfenv"
                     << "debug.sethook" << "debug.setlocal" << "debug.setmetatable" << "debug.setupvalue" << "debug.traceback";
-
     foreach (const QString &pattern, keywordPatterns)
     {
         rule.pattern = QRegExp(pattern);
-        rule.format = keywordFormat;
+        rule.format = keywordFormat4;
         highlightingRules.append(rule);
     }
 
@@ -89,12 +138,6 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
     rule.pattern = QRegExp("\".*\"");
     rule.format = quotationFormat;
     highlightingRules.append(rule);
-
-    functionFormat.setFontItalic(true);
-    functionFormat.setForeground(Qt::blue);
-    rule.pattern = QRegExp("\\b[A-Za-z0-9_]+(?=\\()");
-    rule.format = functionFormat;
-    //highlightingRules.append(rule);
 
     commentStartExpression = QRegExp("--[[");
     commentEndExpression = QRegExp("]]--");
