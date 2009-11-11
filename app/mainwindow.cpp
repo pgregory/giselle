@@ -88,7 +88,7 @@ void MainWindow::selectModel(const QModelIndex &index)
             lua_pop(L, 4);  /* << bodySource << item << container << type */
             return 0;
         }
-    } p = { type, container, name };
+    } p = { type, container, name, "" };
     int res = lua_cpcall(L, C::call, &p);
     if(res != 0)
         mainEditor->clear();
@@ -125,7 +125,7 @@ void MainWindow::acceptChanges()
                 return 0;
             }
         } p = { currentType, currentContainer, currentName, mainEditor->toPlainText().toAscii() };
-        int res = lua_cpcall(L, C::call, &p);
+        /*int res = */lua_cpcall(L, C::call, &p);
     }
 }
 
