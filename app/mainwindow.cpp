@@ -37,6 +37,8 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     sceneTreeView->setModel(sceneModel);
 
     QObject::connect(sceneTreeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(selectModel(QModelIndex)));
+    QObject::connect(ui->actionAccept, SIGNAL(triggered()), this, SLOT(acceptChanges()));
+    QObject::connect(ui->actionRender, SIGNAL(triggered()), this, SLOT(doRender()));
 
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
@@ -91,5 +93,42 @@ void MainWindow::selectModel(const QModelIndex &index)
     if(res != 0)
         mainEditor->clear();
     else
+    {
         mainEditor->setText(p.source);
+        currentType = type;
+        currentContainer = container;
+        currentName = name;
+    }
+}
+
+void MainWindow::acceptChanges()
+{
+    if(currentType != "" && currentContainer != "" && currentName != "")
+    {
+        struct C
+        {
+            QString type;
+            QString container;
+            QString name;
+            QString source;
+            static int call(lua_State *L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                lua_getglobal(L, p->type.toAscii());    // Get the type object.
+                lua_getfield(L, -1, p->container.toAscii());    // Get the container.
+                lua_getfield(L, -1, p->name.toAscii()); // Get the chosen item from the container.
+                lua_getfield(L, -1, "setBody"); // Get the setBody function.
+                lua_pushvalue(L, -2);   // Push self.
+                lua_pushstring(L, p->source.toAscii()); // Push new body text.
+                lua_pcall(L, 2, 0, 0);
+                lua_pop(L, 3);  /* << item << container << type */
+                return 0;
+            }
+        } p = { currentType, currentContainer, currentName, mainEditor->toPlainText().toAscii() };
+        int res = lua_cpcall(L, C::call, &p);
+    }
+}
+
+void MainWindow::doRender()
+{
 }

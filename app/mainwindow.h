@@ -31,6 +31,8 @@ public:
 
 public slots:
     void selectModel(const QModelIndex& index);
+    void acceptChanges();
+    void doRender();
 
 private:
     Ui::MainWindow *ui;
@@ -38,6 +40,9 @@ private:
     QTextEdit* mainEditor;
     LuaHighlighter* highlighter;
     lua_State* L;
+    QString currentType;
+    QString currentContainer;
+    QString currentName;
 };
 
 #endif // MAINWINDOW_H

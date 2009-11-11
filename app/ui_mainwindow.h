@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading ui file 'mainwindow.ui'
 **
-** Created: Wed 11. Nov 10:53:14 2009
+** Created: Wed 11. Nov 16:32:40 2009
 **      by: Qt User Interface Compiler version 4.5.3
 **
 ** WARNING! All changes made in this file will be lost when recompiling ui file!
@@ -14,9 +14,9 @@
 #include <QtGui/QAction>
 #include <QtGui/QApplication>
 #include <QtGui/QButtonGroup>
+#include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
 #include <QtGui/QLineEdit>
-#include <QtGui/QListView>
 #include <QtGui/QMainWindow>
 #include <QtGui/QMenu>
 #include <QtGui/QMenuBar>
@@ -39,17 +39,16 @@ public:
     QAction *actionLoad;
     QAction *actionSave;
     QAction *actionSave_As;
-    QAction *actionUpdate;
+    QAction *actionAccept;
+    QAction *actionRender;
     QWidget *centralWidget;
-    QVBoxLayout *verticalLayout_2;
+    QHBoxLayout *horizontalLayout;
     QSplitter *splitterEditTree;
     QTreeView *sceneTreeView;
-    QWidget *layoutWidget;
-    QVBoxLayout *verticalLayout;
-    QSplitter *splitter_2;
     QSplitter *splitter;
     QTableView *avarTableView;
-    QListView *listView_2;
+    QWidget *layoutWidget;
+    QVBoxLayout *verticalLayout;
     QTextEdit *mainEditor;
     QLineEdit *lineEdit;
     QMenuBar *menuBar;
@@ -73,14 +72,16 @@ public:
         actionSave->setObjectName(QString::fromUtf8("actionSave"));
         actionSave_As = new QAction(MainWindow);
         actionSave_As->setObjectName(QString::fromUtf8("actionSave_As"));
-        actionUpdate = new QAction(MainWindow);
-        actionUpdate->setObjectName(QString::fromUtf8("actionUpdate"));
+        actionAccept = new QAction(MainWindow);
+        actionAccept->setObjectName(QString::fromUtf8("actionAccept"));
+        actionRender = new QAction(MainWindow);
+        actionRender->setObjectName(QString::fromUtf8("actionRender"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
-        verticalLayout_2 = new QVBoxLayout(centralWidget);
-        verticalLayout_2->setSpacing(6);
-        verticalLayout_2->setMargin(11);
-        verticalLayout_2->setObjectName(QString::fromUtf8("verticalLayout_2"));
+        horizontalLayout = new QHBoxLayout(centralWidget);
+        horizontalLayout->setSpacing(6);
+        horizontalLayout->setMargin(11);
+        horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
         splitterEditTree = new QSplitter(centralWidget);
         splitterEditTree->setObjectName(QString::fromUtf8("splitterEditTree"));
         splitterEditTree->setOrientation(Qt::Horizontal);
@@ -89,30 +90,23 @@ public:
         sceneTreeView->setRootIsDecorated(true);
         sceneTreeView->setHeaderHidden(true);
         splitterEditTree->addWidget(sceneTreeView);
-        layoutWidget = new QWidget(splitterEditTree);
-        layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
-        verticalLayout = new QVBoxLayout(layoutWidget);
-        verticalLayout->setSpacing(6);
-        verticalLayout->setMargin(11);
-        verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
-        splitter_2 = new QSplitter(layoutWidget);
-        splitter_2->setObjectName(QString::fromUtf8("splitter_2"));
-        splitter_2->setOrientation(Qt::Vertical);
-        splitter = new QSplitter(splitter_2);
+        splitter = new QSplitter(splitterEditTree);
         splitter->setObjectName(QString::fromUtf8("splitter"));
-        splitter->setOrientation(Qt::Horizontal);
+        splitter->setOrientation(Qt::Vertical);
         avarTableView = new QTableView(splitter);
         avarTableView->setObjectName(QString::fromUtf8("avarTableView"));
         avarTableView->setAlternatingRowColors(true);
         splitter->addWidget(avarTableView);
         avarTableView->horizontalHeader()->setStretchLastSection(true);
         avarTableView->verticalHeader()->setVisible(false);
-        listView_2 = new QListView(splitter);
-        listView_2->setObjectName(QString::fromUtf8("listView_2"));
-        splitter->addWidget(listView_2);
-        splitter_2->addWidget(splitter);
-        mainEditor = new QTextEdit(splitter_2);
+        layoutWidget = new QWidget(splitter);
+        layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
+        verticalLayout = new QVBoxLayout(layoutWidget);
+        verticalLayout->setSpacing(6);
+        verticalLayout->setMargin(11);
+        verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
+        verticalLayout->setContentsMargins(0, 0, 0, 0);
+        mainEditor = new QTextEdit(layoutWidget);
         mainEditor->setObjectName(QString::fromUtf8("mainEditor"));
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sizePolicy.setHorizontalStretch(0);
@@ -120,9 +114,8 @@ public:
         sizePolicy.setHeightForWidth(mainEditor->sizePolicy().hasHeightForWidth());
         mainEditor->setSizePolicy(sizePolicy);
         mainEditor->setTabStopWidth(20);
-        splitter_2->addWidget(mainEditor);
 
-        verticalLayout->addWidget(splitter_2);
+        verticalLayout->addWidget(mainEditor);
 
         lineEdit = new QLineEdit(layoutWidget);
         lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
@@ -134,9 +127,10 @@ public:
 
         verticalLayout->addWidget(lineEdit);
 
-        splitterEditTree->addWidget(layoutWidget);
+        splitter->addWidget(layoutWidget);
+        splitterEditTree->addWidget(splitter);
 
-        verticalLayout_2->addWidget(splitterEditTree);
+        horizontalLayout->addWidget(splitterEditTree);
 
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
@@ -166,7 +160,9 @@ public:
         mainToolBar->addAction(actionSave);
         mainToolBar->addAction(actionSave_As);
         mainToolBar->addSeparator();
-        mainToolBar->addAction(actionUpdate);
+        mainToolBar->addAction(actionAccept);
+        mainToolBar->addSeparator();
+        mainToolBar->addAction(actionRender);
 
         retranslateUi(MainWindow);
 
@@ -181,9 +177,13 @@ public:
         actionLoad->setText(QApplication::translate("MainWindow", "Load", 0, QApplication::UnicodeUTF8));
         actionSave->setText(QApplication::translate("MainWindow", "Save", 0, QApplication::UnicodeUTF8));
         actionSave_As->setText(QApplication::translate("MainWindow", "Save As...", 0, QApplication::UnicodeUTF8));
-        actionUpdate->setText(QApplication::translate("MainWindow", "Update", 0, QApplication::UnicodeUTF8));
+        actionAccept->setText(QApplication::translate("MainWindow", "Accept", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionUpdate->setToolTip(QApplication::translate("MainWindow", "Update the world", 0, QApplication::UnicodeUTF8));
+        actionAccept->setToolTip(QApplication::translate("MainWindow", "Accept changes to the items code", 0, QApplication::UnicodeUTF8));
+#endif // QT_NO_TOOLTIP
+        actionRender->setText(QApplication::translate("MainWindow", "Render", 0, QApplication::UnicodeUTF8));
+#ifndef QT_NO_TOOLTIP
+        actionRender->setToolTip(QApplication::translate("MainWindow", "Render Scene", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         menuFile->setTitle(QApplication::translate("MainWindow", "File", 0, QApplication::UnicodeUTF8));
         menuHelp->setTitle(QApplication::translate("MainWindow", "Help", 0, QApplication::UnicodeUTF8));
