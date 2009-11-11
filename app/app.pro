@@ -6,7 +6,7 @@ TARGET = app
 TEMPLATE = app
 INCLUDEPATH = ../lua
 INCLUDEPATH += /opt/boost_1_37_0/include/boost-1_37
-win32 { 
+win32 {
     debug:LIBS += -L../lua/debug \
         -llua
     release:LIBS += -L../lua/release \

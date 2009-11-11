@@ -1,6 +1,8 @@
 #include <QtGui/QApplication>
 #include "mainwindow.h"
 #include <QSharedPointer>
+#include <QDir>
+#include <QFile>
 
 #include <iostream>
 #include <stdexcept>
@@ -11,6 +13,9 @@ extern "C" {
 #include "lualib.h"
 #include "lstate.h"
 }
+
+#define _QUOTEME(t)    #t
+#define QUOTEME(t) _QUOTEME(t)
 
 class LuaError : public std::exception
 {
@@ -104,11 +109,14 @@ static int pmain (lua_State *L)
         if(status != 0)
             throw(LuaError(L));
 
-        status = luaL_dofile(L, "../../test2.lua");
+        // Load a simple test lua file for development purposes.
+        QDir dir(QUOTEME(ROOT_DIR));
+        QString testLua = dir.filePath("test2.lua");
+        status = luaL_dofile(L, testLua.toAscii());
         if(status != 0)
             throw(LuaError(L));
-
     }
+
     catch(std::exception & e)
     {
         std::cerr << e.what() <<std::endl;
