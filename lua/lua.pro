@@ -56,4 +56,5 @@ HEADERS += lzio.h \
     lcode.h \
     lapi.h \
     lauxlib.h \
-    luaconf.h
+    luaconf.h \
+    lua.h

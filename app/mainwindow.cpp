@@ -4,6 +4,7 @@
 #include "ui_mainwindow.h"
 #include "avarlistmodel.h"
 #include "scenetreemodel.h"
+#include "scenetreeitem.h"
 
 extern "C" {
 #include "lua.h"
@@ -40,19 +41,6 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
     highlighter = new LuaHighlighter(mainEditor->document());
-
-    lua_getglobal(L, "Model");
-    lua_getfield(L, -1, "models");
-    lua_pushnil(L); /* the first key */
-    if(lua_next(L, -2) != 0)
-    {
-        /* 'key' at -2, 'value' at -1 */
-        lua_getfield(L, -1, "bodySource");
-        const char* name = lua_tostring(L, -1);
-        mainEditor->setText(name);
-        lua_pop(L, 2);
-    }
-    lua_pop(L, 2);
 }
 
 MainWindow::~MainWindow()
@@ -62,16 +50,46 @@ MainWindow::~MainWindow()
 
 void MainWindow::selectModel(const QModelIndex &index)
 {
-    std::cerr << "Row: " << index.row() << " Column: " << index.column() << std::endl;
-    lua_getglobal(L, "Model");
-    lua_getfield(L, -1, "models");
-    lua_pushnil(L); /* the first key */
-    int rowNo = index.row();
-    while(lua_next(L, -2) != 0 && --rowNo >= 0)
-        lua_pop(L, 1);
-    /* 'key' at -2, 'value' at -1 */
-    lua_getfield(L, -1, "bodySource");
-    const char* name = lua_tostring(L, -1);
-    mainEditor->setText(name);
-    lua_pop(L, 2);
+    QString type, container;
+    SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
+    QString name = item->data(0).toString();
+
+    switch(item->type())
+    {
+        case MODEL:
+            type = "Model";
+            container = "models";
+            break;
+        case CAMERA:
+            type = "Camera";
+            container = "cameras";
+            break;
+        default:
+            return;
+    }
+
+    struct C
+    {
+        QString type;
+        QString container;
+        QString name;
+        QString source;
+        static int call(lua_State *L)
+        {
+            C* p = static_cast<C*>(lua_touserdata(L, 1));
+            lua_getglobal(L, p->type.toAscii());
+            lua_getfield(L, -1, p->container.toAscii());
+            lua_getfield(L, -1, p->name.toAscii());
+            lua_getfield(L, -1, "bodySource");
+            const char* source = lua_tostring(L, -1);
+            p->source = source;
+            lua_pop(L, 4);  /* << bodySource << item << container << type */
+            return 0;
+        }
+    } p = { type, container, name };
+    int res = lua_cpcall(L, C::call, &p);
+    if(res != 0)
+        mainEditor->clear();
+    else
+        mainEditor->setText(p.source);
 }

@@ -1,17 +1,16 @@
 #include <QtGui/QApplication>
 #include "mainwindow.h"
+#include <QSharedPointer>
 
 #include <iostream>
 #include <stdexcept>
-#include <boost/shared_ptr.hpp>
 
 extern "C" {
 #include "lua.h"
-
 #include "lauxlib.h"
 #include "lualib.h"
+#include "lstate.h"
 }
-
 
 class LuaError : public std::exception
 {
@@ -19,7 +18,7 @@ private:
     lua_State * m_L;
     // resource for error object on Lua stack (is to be popped
     // when no longer used)
-    boost::shared_ptr<lua_State> m_lua_resource;
+    QSharedPointer<lua_State> m_lua_resource;
     LuaError & operator=(const LuaError & other); // prevent
 public:
     // Construct using top-most element on Lua stack as error.
@@ -29,8 +28,7 @@ public:
     virtual const char * what() const throw();
 };
 
-    static void
-LuaError_lua_resource_delete(lua_State * L)
+static void LuaError_lua_resource_delete(lua_State * L)
 {
     lua_pop(L, 1);
 }
@@ -46,8 +44,7 @@ LuaError::LuaError(const LuaError & other)
 {
 
 }
-    const char *
-LuaError::what() const throw()
+const char *LuaError::what() const throw()
 {
     const char * s = lua_tostring(m_L, -1);
     if (s == NULL) s = "unrecognized Lua error";
@@ -92,7 +89,11 @@ static int pmain (lua_State *L)
         current = lua_tostring(L, -1);
         lua_pop(L, 1);
         luaL_buffinit(L, &b);
+#ifdef  _WIN32
+        luaL_addstring(&b, "../../?/init.lua;../../?.lua;");
+#else
         luaL_addstring(&b, "../?/init.lua;../?.lua;");
+#endif
         luaL_addstring(&b, current);
         luaL_pushresult(&b);
         lua_setfield(L, -2, "path");
@@ -103,7 +104,7 @@ static int pmain (lua_State *L)
         if(status != 0)
             throw(LuaError(L));
 
-        status = luaL_dofile(L, "../test2.lua");
+        status = luaL_dofile(L, "../../test2.lua");
         if(status != 0)
             throw(LuaError(L));
 

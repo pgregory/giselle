@@ -9,7 +9,12 @@
 
 #include "luahighlighter.h"
 
-struct lua_State;
+extern "C" {
+#include "lua.h"
+
+#include "lauxlib.h"
+#include "lualib.h"
+}
 
 namespace Ui
 {

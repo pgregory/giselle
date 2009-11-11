@@ -4,10 +4,21 @@
 #include <QList>
 #include <QVariant>
 
+enum _TreeItemType
+{
+    ROOT,
+    MODELS,
+    CAMERAS,
+    MODEL,
+    CAMERA,
+};
+
+typedef _TreeItemType TreeItemType;
+
 class SceneTreeItem
 {
 public:
-    SceneTreeItem(const QList<QVariant> &data, SceneTreeItem *parent = 0);
+    SceneTreeItem(const QList<QVariant> &data, TreeItemType type, SceneTreeItem *parent = 0);
     ~SceneTreeItem();
 
     void appendChild(SceneTreeItem *child);
@@ -18,10 +29,12 @@ public:
     QVariant data(int column) const;
     int row() const;
     SceneTreeItem *parent();
+    TreeItemType type() const;
 
 private:
     QList<SceneTreeItem*> childItems;
     QList<QVariant> itemData;
+    TreeItemType itemType;
     SceneTreeItem *parentItem;
  };
 

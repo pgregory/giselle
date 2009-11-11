@@ -1,8 +1,8 @@
 /********************************************************************************
 ** Form generated from reading ui file 'mainwindow.ui'
 **
-** Created: Sun Nov 8 23:07:26 2009
-**      by: Qt User Interface Compiler version 4.5.0
+** Created: Wed 11. Nov 10:53:14 2009
+**      by: Qt User Interface Compiler version 4.5.3
 **
 ** WARNING! All changes made in this file will be lost when recompiling ui file!
 ********************************************************************************/
@@ -50,7 +50,7 @@ public:
     QSplitter *splitter;
     QTableView *avarTableView;
     QListView *listView_2;
-    QTextEdit *textEdit;
+    QTextEdit *mainEditor;
     QLineEdit *lineEdit;
     QMenuBar *menuBar;
     QMenu *menuFile;
@@ -112,14 +112,15 @@ public:
         listView_2->setObjectName(QString::fromUtf8("listView_2"));
         splitter->addWidget(listView_2);
         splitter_2->addWidget(splitter);
-        textEdit = new QTextEdit(splitter_2);
-        textEdit->setObjectName(QString::fromUtf8("textEdit"));
+        mainEditor = new QTextEdit(splitter_2);
+        mainEditor->setObjectName(QString::fromUtf8("mainEditor"));
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth(textEdit->sizePolicy().hasHeightForWidth());
-        textEdit->setSizePolicy(sizePolicy);
-        splitter_2->addWidget(textEdit);
+        sizePolicy.setHeightForWidth(mainEditor->sizePolicy().hasHeightForWidth());
+        mainEditor->setSizePolicy(sizePolicy);
+        mainEditor->setTabStopWidth(20);
+        splitter_2->addWidget(mainEditor);
 
         verticalLayout->addWidget(splitter_2);
 
@@ -140,7 +141,7 @@ public:
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 884, 25));
+        menuBar->setGeometry(QRect(0, 0, 884, 21));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
         menuHelp = new QMenu(menuBar);

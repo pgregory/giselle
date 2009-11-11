@@ -18,10 +18,10 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
 {
     QList<QVariant> rootData;
     rootData << "Scene";
-    rootItem = new SceneTreeItem(rootData);
+    rootItem = new SceneTreeItem(rootData, ROOT);
     QList<QVariant> modelNodeData;
     modelNodeData << "Models";
-    SceneTreeItem* modelsItem = new SceneTreeItem(modelNodeData, rootItem);
+    SceneTreeItem* modelsItem = new SceneTreeItem(modelNodeData, MODELS, rootItem);
     rootItem->appendChild(modelsItem);
 
     // Now fill in the models from the Lua state.
@@ -35,7 +35,7 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
         const char* name = lua_tostring(L, -1);
         QList<QVariant> modelData;
         modelData << name;
-        modelsItem->appendChild(new SceneTreeItem(modelData, modelsItem));
+        modelsItem->appendChild(new SceneTreeItem(modelData, MODEL, modelsItem));
         lua_pop(L, 1);
         lua_pop(L, 1);  /* pop value, leave key for next iteration */
     }
@@ -43,7 +43,7 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
 
     QList<QVariant> cameraNodeData;
     cameraNodeData << "Cameras";
-    SceneTreeItem* camerasItem = new SceneTreeItem(cameraNodeData, rootItem);
+    SceneTreeItem* camerasItem = new SceneTreeItem(cameraNodeData, CAMERAS, rootItem);
     rootItem->appendChild(camerasItem);
 
     // Now fill in the cameras from the Lua state.
@@ -57,7 +57,7 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
         const char* name = lua_tostring(L, -1);
         QList<QVariant> cameraData;
         cameraData << name;
-        camerasItem->appendChild(new SceneTreeItem(cameraData, camerasItem));
+        camerasItem->appendChild(new SceneTreeItem(cameraData, CAMERA, camerasItem));
         lua_pop(L, 1);
         lua_pop(L, 1);  /* pop value, leave key for next iteration */
     }

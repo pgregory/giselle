@@ -3,10 +3,11 @@
 #include <QStringList>
 
 
-SceneTreeItem::SceneTreeItem(const QList<QVariant> &data, SceneTreeItem *parent)
+SceneTreeItem::SceneTreeItem(const QList<QVariant> &data, TreeItemType type, SceneTreeItem *parent)
 {
     parentItem = parent;
     itemData = data;
+    itemType = type;
 }
 
 SceneTreeItem::~SceneTreeItem()
@@ -50,4 +51,9 @@ int SceneTreeItem::row() const
         return parentItem->childItems.indexOf(const_cast<SceneTreeItem*>(this));
 
     return 0;
+}
+
+TreeItemType SceneTreeItem::type() const
+{
+    return itemType;
 }
