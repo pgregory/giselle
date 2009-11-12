@@ -23,14 +23,6 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     splitter = ui->splitterEditTree;
     splitter->setStretchFactor(1,1);
 
-    QStringList avarsTest;
-    avarsTest << "radius" << "zmin" << "zmax" << "thetamax";
-
-    QAbstractItemModel* model = new AvarListModel(avarsTest);
-    QTableView* view = new QTableView;
-    view = ui->avarTableView;
-    view->setModel(model);
-
     SceneTreeModel* sceneModel = new SceneTreeModel(L);
     QTreeView* sceneTreeView = new QTreeView;
     sceneTreeView = ui->sceneTreeView;
@@ -55,6 +47,7 @@ void MainWindow::selectModel(const QModelIndex &index)
     QString type, container;
     SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
     QString name = item->data(0).toString();
+    QStringList avarsList;
 
     switch(item->type())
     {
@@ -76,6 +69,7 @@ void MainWindow::selectModel(const QModelIndex &index)
         QString container;
         QString name;
         QString source;
+        QStringList& avars;
         static int call(lua_State *L)
         {
             C* p = static_cast<C*>(lua_touserdata(L, 1));
@@ -85,10 +79,20 @@ void MainWindow::selectModel(const QModelIndex &index)
             lua_getfield(L, -1, "bodySource");
             const char* source = lua_tostring(L, -1);
             p->source = source;
-            lua_pop(L, 4);  /* << bodySource << item << container << type */
+            lua_pop(L, 1);  /* << bodySource */
+            lua_getfield(L, -1, "avars");
+            lua_pushnil(L); /* the first key */
+            while(lua_next(L, -2) != 0)
+            {
+                /* 'key' at -2, 'value' at -1 */
+                const char* name = lua_tostring(L, -2); /* key */
+                p->avars << name;
+                lua_pop(L, 1);  /* pop value, leave key for next iteration */
+            }
+            lua_pop(L, 4);  /* << avars << item << container << type */
             return 0;
         }
-    } p = { type, container, name, "" };
+    } p = { type, container, name, "", avarsList };
     int res = lua_cpcall(L, C::call, &p);
     if(res != 0)
         mainEditor->clear();
@@ -99,6 +103,13 @@ void MainWindow::selectModel(const QModelIndex &index)
         currentContainer = container;
         currentName = name;
     }
+
+    QAbstractItemModel* model = new AvarListModel(avarsList);
+    QTableView* view = new QTableView;
+    view = ui->avarTableView;
+    QItemSelectionModel* old = view->selectionModel();
+    view->setModel(model);
+    delete old;
 }
 
 void MainWindow::acceptChanges()
