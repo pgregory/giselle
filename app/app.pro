@@ -6,7 +6,7 @@ TARGET = app
 TEMPLATE = app
 INCLUDEPATH = ../lua
 INCLUDEPATH += /opt/boost_1_37_0/include/boost-1_37
-win32 {
+win32 { 
     debug:LIBS += -L../lua/debug \
         -llua
     release:LIBS += -L../lua/release \
@@ -19,10 +19,12 @@ SOURCES += main.cpp \
     avarlistmodel.cpp \
     scenetreemodel.cpp \
     scenetreeitem.cpp \
-    luahighlighter.cpp
+    luahighlighter.cpp \
+    avarlistitem.cpp
 HEADERS += mainwindow.h \
     avarlistmodel.h \
     scenetreemodel.h \
     scenetreeitem.h \
-    luahighlighter.h
+    luahighlighter.h \
+    avarlistitem.h
 FORMS += mainwindow.ui

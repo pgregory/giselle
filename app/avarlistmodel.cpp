@@ -7,7 +7,7 @@ int AvarListModel::rowCount(const QModelIndex& parent) const
 
 int AvarListModel::columnCount(const QModelIndex& parent) const
 {
-    return 1;
+    return 2;
 }
 
 
@@ -16,11 +16,11 @@ QVariant AvarListModel::data(const QModelIndex & index, int role) const
     if(!index.isValid())
         return QVariant();
 
-    if(index.row() >= avarList.size() || index.column() > 0)
+    if(index.row() >= avarList.size())
         return QVariant();
 
     if(role == Qt::DisplayRole)
-        return avarList.at(index.row());
+        return avarList.at(index.row()).keyframes()[index.column()].second;
     else
         return QVariant();
 }
@@ -32,8 +32,8 @@ QVariant AvarListModel::headerData(int section, Qt::Orientation orientation, int
 
     if(orientation == Qt::Horizontal)
     {
-        if(section == 0)
-            return QString("Type");
+        if(section < avarList[0].keyframes().size())
+            return avarList[0].keyframes()[section].first;
         else
             return QVariant();
     }
@@ -42,6 +42,6 @@ QVariant AvarListModel::headerData(int section, Qt::Orientation orientation, int
         if(section >= avarList.size())
             return QVariant();
         else
-            return avarList.at(section);
+            return avarList.at(section).name();
     }
 }

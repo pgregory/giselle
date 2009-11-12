@@ -6,6 +6,8 @@
 #include "scenetreemodel.h"
 #include "scenetreeitem.h"
 
+#include <QMap>
+
 extern "C" {
 #include "lua.h"
 
@@ -47,7 +49,7 @@ void MainWindow::selectModel(const QModelIndex &index)
     QString type, container;
     SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
     QString name = item->data(0).toString();
-    QStringList avarsList;
+    QMap<QString, QList<QPair<float, float> > > avarsList;
 
     switch(item->type())
     {
@@ -69,7 +71,7 @@ void MainWindow::selectModel(const QModelIndex &index)
         QString container;
         QString name;
         QString source;
-        QStringList& avars;
+        QMap<QString, QList<QPair<float, float> > >& avars;
         static int call(lua_State *L)
         {
             C* p = static_cast<C*>(lua_touserdata(L, 1));
@@ -86,8 +88,11 @@ void MainWindow::selectModel(const QModelIndex &index)
             {
                 /* 'key' at -2, 'value' at -1 */
                 const char* name = lua_tostring(L, -2); /* key */
-                p->avars << name;
-                lua_pop(L, 1);  /* pop value, leave key for next iteration */
+                lua_getfield(L, -1, "keyframes");
+                QList<QPair<float, float> > keys;
+                keys << qMakePair(0.0f, 0.0f) << qMakePair(30.0f, 1.0f);
+                p->avars[name] = keys;
+                lua_pop(L, 2);  /* << keyframes, pop value, leave key for next iteration */
             }
             lua_pop(L, 4);  /* << avars << item << container << type */
             return 0;
@@ -104,7 +109,10 @@ void MainWindow::selectModel(const QModelIndex &index)
         currentName = name;
     }
 
-    QAbstractItemModel* model = new AvarListModel(avarsList);
+    QList<AvarListItem> avars;
+    for(QMap<QString, QList<QPair<float, float> > >::iterator k = avarsList.begin(), end = avarsList.end(); k != end; ++k)
+        avars << AvarListItem(k.key(), k.value());
+    QAbstractItemModel* model = new AvarListModel(avars);
     QTableView* view = new QTableView;
     view = ui->avarTableView;
     QItemSelectionModel* old = view->selectionModel();
