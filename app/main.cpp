@@ -1,5 +1,6 @@
 #include <QtGui/QApplication>
 #include "mainwindow.h"
+#include "glwindow.h"
 #include <QSharedPointer>
 #include <QDir>
 #include <QFile>
@@ -140,6 +141,9 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MainWindow w(L);
     w.show();
+
+    GLWindow gl;
+    gl.show();
 
     int result = a.exec();
 

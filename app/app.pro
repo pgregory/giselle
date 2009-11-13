@@ -20,11 +20,15 @@ SOURCES += main.cpp \
     scenetreemodel.cpp \
     scenetreeitem.cpp \
     luahighlighter.cpp \
-    avarlistitem.cpp
+    avarlistitem.cpp \
+    glwindow.cpp
 HEADERS += mainwindow.h \
     avarlistmodel.h \
     scenetreemodel.h \
     scenetreeitem.h \
     luahighlighter.h \
-    avarlistitem.h
-FORMS += mainwindow.ui
+    avarlistitem.h \
+    glwindow.h \
+    openglwidget.h
+FORMS += mainwindow.ui \
+    glwindow.ui

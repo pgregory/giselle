@@ -1,5 +1,25 @@
 #include "avarlistmodel.h"
 
+AvarListModel::AvarListModel(const QList<AvarListItem>& avars, QObject* parent) :
+            QAbstractTableModel(parent), avarList(avars)
+{
+    // Work out how many columns by looking at all the avars.
+    float max = 0.0f, min = 0.0f;
+    AvarListItem av;
+    foreach(av, avarList)
+    {
+        QPair<float, float> kf;
+        foreach(kf, av.keyframes())
+        {
+            max = qMax(max, kf.first);
+            min = qMin(min, kf.first);
+        }
+    }
+    _startFrame = qRound(min);
+    _endFrame = qRound(max);
+    _maxColumns = (_endFrame - _startFrame) + 1;
+}
+
 int AvarListModel::rowCount(const QModelIndex& parent) const
 {
     return avarList.count();
@@ -7,7 +27,7 @@ int AvarListModel::rowCount(const QModelIndex& parent) const
 
 int AvarListModel::columnCount(const QModelIndex& parent) const
 {
-    return 2;
+    return _maxColumns;
 }
 
 
@@ -20,7 +40,16 @@ QVariant AvarListModel::data(const QModelIndex & index, int role) const
         return QVariant();
 
     if(role == Qt::DisplayRole)
-        return avarList.at(index.row()).keyframes()[index.column()].second;
+    {
+        const AvarListItem& av = avarList.at(index.row());
+        QList<QPair<float, float> >::const_iterator kf = av.keyframes().begin(), end = av.keyframes().end();
+        while(kf->first < index.column() && kf != end)
+            ++kf;
+        if(kf != end && kf->first <= index.column())
+            return kf->second;
+        else
+            return QVariant();
+    }
     else
         return QVariant();
 }
@@ -32,8 +61,8 @@ QVariant AvarListModel::headerData(int section, Qt::Orientation orientation, int
 
     if(orientation == Qt::Horizontal)
     {
-        if(section < avarList[0].keyframes().size())
-            return avarList[0].keyframes()[section].first;
+        if(avarList.size() > 0)
+            return _startFrame + section;
         else
             return QVariant();
     }
