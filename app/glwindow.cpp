@@ -1,11 +1,13 @@
 #include "glwindow.h"
 #include "ui_glwindow.h"
 
-GLWindow::GLWindow(QWidget *parent) :
+GLWindow::GLWindow(lua_State* L, QWidget *parent) :
     QMainWindow(parent),
-    m_ui(new Ui::GLWindow)
+    m_ui(new Ui::GLWindow),
+    m_L(L)
 {
     m_ui->setupUi(this);
+    m_ui->graphicsView->initialiseLua(L);
 }
 
 GLWindow::~GLWindow()

@@ -3,6 +3,11 @@
 
 #include <QtGui/QMainWindow>
 
+extern "C" {
+#include "lua.h"
+#include "lauxlib.h"
+}
+
 namespace Ui {
     class GLWindow;
 }
@@ -10,7 +15,7 @@ namespace Ui {
 class GLWindow : public QMainWindow {
     Q_OBJECT
 public:
-    GLWindow(QWidget *parent = 0);
+    GLWindow(lua_State* L, QWidget *parent = 0);
     ~GLWindow();
 
 protected:
@@ -18,6 +23,7 @@ protected:
 
 private:
     Ui::GLWindow *m_ui;
+    lua_State*  m_L;
 };
 
 #endif // GLWINDOW_H

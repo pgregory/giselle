@@ -5,60 +5,19 @@
 #include <QDir>
 #include <QFile>
 
-#include <iostream>
-#include <stdexcept>
-
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
 #include "lstate.h"
+#include "luagl.h"
+#include "luaglu.h"
 }
+
+#include "luaerror.h"
 
 #define _QUOTEME(t)    #t
 #define QUOTEME(t) _QUOTEME(t)
-
-class LuaError : public std::exception
-{
-private:
-    lua_State * m_L;
-    // resource for error object on Lua stack (is to be popped
-    // when no longer used)
-    QSharedPointer<lua_State> m_lua_resource;
-    LuaError & operator=(const LuaError & other); // prevent
-public:
-    // Construct using top-most element on Lua stack as error.
-    LuaError(lua_State * L);
-    LuaError(const LuaError & other);
-    ~LuaError() throw();
-    virtual const char * what() const throw();
-};
-
-static void LuaError_lua_resource_delete(lua_State * L)
-{
-    lua_pop(L, 1);
-}
-
-LuaError::LuaError(lua_State * L)
-    : m_L(L), m_lua_resource(L, LuaError_lua_resource_delete)
-{
-
-}
-
-LuaError::LuaError(const LuaError & other)
-    : m_L(other.m_L), m_lua_resource(other.m_lua_resource)
-{
-
-}
-const char *LuaError::what() const throw()
-{
-    const char * s = lua_tostring(m_L, -1);
-    if (s == NULL) s = "unrecognized Lua error";
-    return s;
-}
-LuaError::~LuaError() throw()
-{
-}
 
 
 static int pmain (lua_State *L)
@@ -71,6 +30,8 @@ static int pmain (lua_State *L)
     {
         lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
         luaL_openlibs(L);  /* open libraries */
+        luaopen_luagl(L);
+        luaopen_luaglu(L);
         lua_gc(L, LUA_GCRESTART, 0);
 
         // Setup package.cpath to find our extensions.
@@ -142,7 +103,7 @@ int main(int argc, char *argv[])
     MainWindow w(L);
     w.show();
 
-    GLWindow gl;
+    GLWindow gl(L);
     gl.show();
 
     int result = a.exec();

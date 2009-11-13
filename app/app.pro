@@ -5,15 +5,21 @@ QT += opengl
 TARGET = app
 TEMPLATE = app
 INCLUDEPATH = ../lua
-INCLUDEPATH += /opt/boost_1_37_0/include/boost-1_37
+INCLUDEPATH += ../luagl
 win32 { 
     debug:LIBS += -L../lua/debug \
-        -llua
+        -llua \
+        -L../luagl/debug \
+        -lluagl
     release:LIBS += -L../lua/release \
-        -llua
+        -llua \
+        -L../luagl/release \
+        -lluagl
 }
 !win32:LIBS += -L../lua \
-    -llua
+    -llua \
+    -L../luagl \
+    -lluagl
 SOURCES += main.cpp \
     mainwindow.cpp \
     avarlistmodel.cpp \
@@ -21,7 +27,8 @@ SOURCES += main.cpp \
     scenetreeitem.cpp \
     luahighlighter.cpp \
     avarlistitem.cpp \
-    glwindow.cpp
+    glwindow.cpp \
+    openglwidget.cpp
 HEADERS += mainwindow.h \
     avarlistmodel.h \
     scenetreemodel.h \
@@ -29,6 +36,7 @@ HEADERS += mainwindow.h \
     luahighlighter.h \
     avarlistitem.h \
     glwindow.h \
-    openglwidget.h
+    openglwidget.h \
+    luaerror.h
 FORMS += mainwindow.ui \
     glwindow.ui

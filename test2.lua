@@ -76,15 +76,4 @@ Translate(0,0,-7)
 ]])
 
 
-theRenderer = RenderMan:create("aqsis")
-
-theRenderer:renderIt{world=theWorld, camera=theCamera, 
-					 start=0, stop=30, incr=1,-- motion_blur=0.5,
-					 ribfile="scissor.rib",
-					 display_name="scissor_~s.tif",
-					 display_type="file",
-					 display_mode="rgb",
-					 xres = 320,
-					 yres = 240}
-
-print(os.clock())
+theGLRenderer = GLRenderer:create("test")
