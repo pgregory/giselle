@@ -33,7 +33,7 @@ TransformEnd()
 end
 
 scissor = Model("scissor")
-scissor.extension = scissor:avar("extension", {{0.0, 0.0}, {30.0, 1.0}})
+scissor.extension = scissor:avar("extension", {{0.0, 0.0}, {10.0, 0.0}, {20.0, 0.5}, {25.0, 0.9}, {30.0, 1.0}})
 scissor.segments = 5
 scissor.bladelength = 2
 scissor.bladewidth = 0.3
@@ -65,7 +65,7 @@ end
 
 theCamera = Camera("main")
 theCamera.pan = theCamera:avar("pan", {{0.0, 180.0}, {30.0, 270.0}})
-theCamera.dolly = theCamera:avar("dolly", {{0.0, 4.0}, {30.0, 8.0}})
+theCamera.dolly = theCamera:avar("dolly", {{0.0, 4.0}, {15.0, 4.0}, {30.0, 8.0}})
 theCamera:setBody(
 [[
 Projection("perspective", {fov = 50})

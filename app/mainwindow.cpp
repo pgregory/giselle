@@ -90,7 +90,17 @@ void MainWindow::selectModel(const QModelIndex &index)
                 const char* name = lua_tostring(L, -2); /* key */
                 lua_getfield(L, -1, "keyframes");
                 QList<QPair<float, float> > keys;
-                keys << qMakePair(0.0f, 0.0f) << qMakePair(30.0f, 1.0f);
+                lua_pushnil(L); /* the first key */
+                while(lua_next(L, -2) != 0)
+                {
+                    lua_getfield(L, -1, "time");
+                    float time = lua_tonumber(L, -1);
+                    lua_pop(L, 1); /* << time */
+                    lua_getfield(L, -1, "value");
+                    float value = lua_tonumber(L, -1);
+                    keys << qMakePair(time, value);
+                    lua_pop(L, 2); /* << value << value [leave key for next iteration */
+                }
                 p->avars[name] = keys;
                 lua_pop(L, 2);  /* << keyframes, pop value, leave key for next iteration */
             }

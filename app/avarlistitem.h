@@ -7,6 +7,7 @@
 class AvarListItem
 {
 public:
+    AvarListItem() : _name("") {}
     AvarListItem(const QString& name, const QList<QPair<float, float> > &keyframes);
     ~AvarListItem();
 
