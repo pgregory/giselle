@@ -366,6 +366,22 @@ static int luaglu_new_quadric(lua_State *L)
 	return 1;
 }
 
+/* QuadricDrawStyle() -> none */
+static int luaglu_quadricdrawstyle(lua_State *L)
+{
+    GLenum e;
+    GLUquadricObj* quad = checkGLUquadricObj(L, 1);
+    /* test argument */
+    if(!lua_isstring(L, 2))
+        LUAGL_SHOWERROR("incorrect argument to function 'gl.Begin'");
+
+    e = luaglu_get_gl_enum(L, 2);
+
+    gluQuadricDrawStyle(quad,e);
+
+    return 0;
+}
+
 /* Sphere() -> none */
 static int luaglu_sphere(lua_State *L)
 {
@@ -427,6 +443,7 @@ static const luaL_reg luaglu_lib[] = {
   {"Sphere", luaglu_sphere},
   {"Cylinder", luaglu_cylinder},
   {"Disk", luaglu_disk},
+  {"QuadricDrawStyle", luaglu_quadricdrawstyle},
   {NULL, NULL}
 };
 

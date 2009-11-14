@@ -21,6 +21,10 @@ public:
 protected:
     void changeEvent(QEvent *e);
 
+public slots:
+    void setModeWire();
+    void setModeSolid();
+
 private:
     Ui::GLWindow *m_ui;
     lua_State*  m_L;

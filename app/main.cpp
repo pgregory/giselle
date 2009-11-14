@@ -36,22 +36,6 @@ static int pmain (lua_State *L)
 
         // Setup package.cpath to find our extensions.
         lua_getglobal(L, "package");
-        //lua_getfield(L, -1, "cpath");
-        //current = lua_tostring(L, -1);
-        //lua_pop(L, 1);
-        //luaL_buffinit(L, &b);
-        //luaL_addstring(&b, INSTALL_BIN_PATH);
-    #ifdef _WIN32
-        //luaL_addstring(&b, "/?.dll;");
-    #else
-        //luaL_addstring(&b, "/lib?.so;");
-        //luaL_addstring(&b, INSTALL_BIN_PATH);
-        //luaL_addstring(&b, "/?.so;");
-    #endif
-        //luaL_addstring(&b, current);
-        //luaL_pushresult(&b);
-        //lua_setfield(L, -2, "cpath");
-
         lua_getfield(L, -1, "path");
         current = lua_tostring(L, -1);
         lua_pop(L, 1);

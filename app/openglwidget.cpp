@@ -29,7 +29,7 @@ void OpenGLWidget::paintGL()
                 lua_setfield(L, -2, "start");
                 lua_pushinteger(L, p->time);
                 lua_setfield(L, -2, "stop");
-                lua_pcall(L, 2, 0, 0);
+                lua_call(L, 2, 0);
                 lua_pop(L, 1);  /* << theGLRenderer" */
                 return 0;
             }

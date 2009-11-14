@@ -1,4 +1,5 @@
 GLRenderer = Object:clone()
+GLRenderer.mode = 'LINES'
 
 function GLRenderer:create(name)
 	local r, tab = Renderer:create(name)
@@ -22,19 +23,34 @@ function GLRenderer:create(name)
 		gl.Rotate(self.angle, self.x, self.y, self.z)
 	end
 	function tab:Cylinder()
-                local quad = glu.NewQuadric()
-		gl.PushMatrix()
+        local quad = glu.NewQuadric()
+        if GLRenderer.mode == 'LINES' then
+            glu.QuadricDrawStyle(quad, 'LINE')
+        else
+            glu.QuadricDrawStyle(quad, 'SOLID')
+        end
+        gl.PushMatrix()
 		gl.Translate(0, 0, self.zmin)
 		glu.Cylinder(quad, self.radius, self.radius, self.zmax-self.zmin, 12, 1)
 		gl.PopMatrix()
 	end
 	function tab:Sphere()
 		local quad = glu.NewQuadric()
-		glu.Sphere(quad, self.radius, 12, 6)
+        if GLRenderer.mode == 'LINES' then
+            glu.QuadricDrawStyle(quad, 'LINE')
+        else
+            glu.QuadricDrawStyle(quad, 'SOLID')
+        end
+        glu.Sphere(quad, self.radius, 12, 6)
 	end
 	function tab:Disk()
 		local quad = glu.NewQuadric()
-		glu.Disk(quad, 0, self.radius, 12, 1)
+        if GLRenderer.mode == 'LINES' then
+            glu.QuadricDrawStyle(quad, 'LINE')
+        else
+            glu.QuadricDrawStyle(quad, 'SOLID')
+        end
+        glu.Disk(quad, 0, self.radius, 12, 1)
 	end
 	function tab:PatchMesh()
 		gl.Begin('TRIANGLES')         -- Drawing Using Triangles
@@ -44,7 +60,11 @@ function GLRenderer:create(name)
 		gl.End()                      -- Done Drawing A Triangle
 	end
 	function tab:Polygon()
-		gl.Begin('POLYGON')
+        if GLRenderer.mode == 'LINES' then
+            gl.Begin('LINES')
+        else
+            gl.Begin('POLYGON')
+        end
 		if self.paramList["P"] then
 			for i=1, #self.paramList["P"], 3 do
 				gl.Vertex(self.paramList["P"][i], self.paramList["P"][i+1], self.paramList["P"][i+2])
@@ -65,7 +85,7 @@ function GLRenderer:create(name)
 	end
 
 	function r:finish()
-	end
+    end
 
 	function r:format(options)
 	end
