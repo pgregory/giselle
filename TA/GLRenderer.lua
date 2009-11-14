@@ -22,7 +22,7 @@ function GLRenderer:create(name)
 		gl.Rotate(self.angle, self.x, self.y, self.z)
 	end
 	function tab:Cylinder()
-		local quad = glu.NewQuadric()
+                local quad = glu.NewQuadric()
 		gl.PushMatrix()
 		gl.Translate(0, 0, self.zmin)
 		glu.Cylinder(quad, self.radius, self.radius, self.zmax-self.zmin, 12, 1)

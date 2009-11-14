@@ -16,13 +16,16 @@ class OpenGLWidget : public QGLWidget
 
 public:
     OpenGLWidget(QWidget* parent)
-            :QGLWidget(parent)
+            :QGLWidget(parent), m_time(0)
     {}
 
     void initialiseLua(lua_State* L)
     {
         m_L = L;
     }
+
+public slots:
+    void timeChanged(int time);
 
 protected:
     void initializeGL()
@@ -41,7 +44,7 @@ protected:
         GLdouble width = w, height = h;
         if(h == 0)
             height = 1.0;
-        gluPerspective(45.0, width/height, 0.1, 10000);
+        gluPerspective(45.0, width/height, 1, 100);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -51,6 +54,7 @@ protected:
 
 private:
     lua_State* m_L;
+    int        m_time;
 };
 
 #endif // OPENGLWIDGET_H

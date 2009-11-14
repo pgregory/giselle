@@ -9,7 +9,5 @@ function Object.clone( base_object, clone_object )
   return setmetatable(clone_object, clone_object)
 end
 
-print("Hello, from inside Object.lua")
-
 return Object
 

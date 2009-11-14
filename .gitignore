@@ -1,0 +1,8 @@
+app/ui_*.h
+app/*.pro.user
+app/debug
+app/release
+lua/debug
+lua/release
+luagl/debug
+luagl/release

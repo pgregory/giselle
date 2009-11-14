@@ -86,7 +86,7 @@ function Renderer:renderRenderables(renderables, times)
 		if ro.group then
 			local subRenderables = {}
 			local f0 = ro:generate(times[1])
-			table.insert(subRenderables, f0)
+                        table.insert(subRenderables, f0)
 			for frame = 2, #renderables do
 				local fn = renderables[frame][i]:generate(times[frame])
 				table.insert(subRenderables, fn)

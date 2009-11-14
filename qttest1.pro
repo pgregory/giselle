@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 SOURCES = .qmake.cache
+CONFIG = ordered
 SUBDIRS = lua \
-          app \
-          luagl
+          luagl \
+          app

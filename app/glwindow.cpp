@@ -8,6 +8,8 @@ GLWindow::GLWindow(lua_State* L, QWidget *parent) :
 {
     m_ui->setupUi(this);
     m_ui->graphicsView->initialiseLua(L);
+
+    QObject::connect(m_ui->timeSlider, SIGNAL(valueChanged(int)), m_ui->graphicsView, SLOT(timeChanged(int)));
 }
 
 GLWindow::~GLWindow()
