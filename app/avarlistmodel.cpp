@@ -74,3 +74,45 @@ QVariant AvarListModel::headerData(int section, Qt::Orientation orientation, int
             return avarList.at(section).name();
     }
 }
+
+
+Qt::ItemFlags AvarListModel::flags(const QModelIndex &index) const
+{
+    if(!index.isValid())
+        return Qt::ItemIsEnabled;
+
+    if(index.row() >= avarList.size())
+        return Qt::ItemIsEnabled;
+
+    const AvarListItem& av = avarList.at(index.row());
+    QList<QPair<float, float> >::const_iterator kf = av.keyframes().begin(), end = av.keyframes().end();
+    while(kf->first < index.column() && kf != end)
+        ++kf;
+    if(kf != end && kf->first <= index.column())
+        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+    else
+        return Qt::ItemIsEnabled;
+}
+
+
+bool AvarListModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if(!index.isValid())
+        return false;
+
+    if(index.row() >= avarList.size())
+        return false;
+
+    AvarListItem& av = avarList[index.row()];
+    QList<QPair<float, float> >::iterator kf = av.keyframes().begin(), end = av.keyframes().end();
+    while(kf->first < index.column() && kf != end)
+        ++kf;
+    if(kf != end && kf->first <= index.column())
+    {
+        kf->second = value.toDouble();
+        emit dataChanged(index, index);
+        return true;
+    }
+    else
+        return false;
+}
