@@ -87,9 +87,6 @@ int main(int argc, char *argv[])
     MainWindow w(L);
     w.show();
 
-    GLWindow gl(L);
-    gl.show();
-
     int result = a.exec();
 
     lua_close(L);

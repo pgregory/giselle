@@ -21,6 +21,8 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->graphicsView->initialiseLua(L);
+
     splitter = new QSplitter;
     splitter = ui->splitterEditTree;
     splitter->setStretchFactor(1,1);
@@ -33,6 +35,8 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     QObject::connect(sceneTreeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(selectModel(QModelIndex)));
     QObject::connect(ui->actionAccept, SIGNAL(triggered()), this, SLOT(acceptChanges()));
     QObject::connect(ui->actionRender, SIGNAL(triggered()), this, SLOT(doRender()));
+
+    QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), ui->graphicsView, SLOT(timeChanged(int)));
 
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;

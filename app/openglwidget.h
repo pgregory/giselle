@@ -24,6 +24,11 @@ public:
         m_L = L;
     }
 
+    QSize sizeHint() const
+    {
+        return QSize(320,240);
+    }
+
 public slots:
     void timeChanged(int time);
 
