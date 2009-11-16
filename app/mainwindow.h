@@ -43,6 +43,7 @@ private:
     QString currentType;
     QString currentContainer;
     QString currentName;
+    int     m_currentObjectRef;
 };
 
 #endif // MAINWINDOW_H

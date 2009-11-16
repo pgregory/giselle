@@ -5,6 +5,10 @@
 #include <QStringList>
 #include <QList>
 
+extern "C" {
+#include "lua.h"
+}
+
 #include "avarlistitem.h"
 
 class AvarListModel : public QAbstractTableModel
@@ -12,7 +16,7 @@ class AvarListModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    AvarListModel(const QList<AvarListItem>& avars, QObject* parent = 0);
+    AvarListModel(lua_State* L, const QList<int>& avars, QObject* parent = 0);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const;
     int columnCount(const QModelIndex& parent = QModelIndex()) const;
@@ -27,6 +31,7 @@ private:
     int _startFrame;
     int _endFrame;
     int _maxColumns;
+    lua_State* m_L;
 };
 
 #endif // AVARLISTMODEL_H

@@ -34,8 +34,11 @@ end
 function Avar:create(name, keyframes)
 	local o = Avar:clone()
 	o.keyframes = {}
-	for i,v in ipairs(keyframes) do
-		table.insert(o.keyframes, KeyFrame:create(v[1], v[2]))
+        if #keyframes > 0 then
+            table.sort(keyframes, function(a,b) return a[1] < b[1] end)
+            for i,v in ipairs(keyframes) do
+                    o.keyframes[i] = KeyFrame:create(v[1], v[2])
+            end
 	end
 	o.name = name
 	setmetatable(o, self)

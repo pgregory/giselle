@@ -17,7 +17,7 @@ extern "C" {
 
 
 MainWindow::MainWindow(lua_State *L, QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), L(L)
+    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL)
 {
     ui->setupUi(this);
 
@@ -75,7 +75,8 @@ void MainWindow::selectModel(const QModelIndex &index)
         QString container;
         QString name;
         QString source;
-        QMap<QString, QList<QPair<float, float> > >& avars;
+        QList<int> avars;
+        int     objref;
         static int call(lua_State *L)
         {
             C* p = static_cast<C*>(lua_touserdata(L, 1));
@@ -91,27 +92,15 @@ void MainWindow::selectModel(const QModelIndex &index)
             while(lua_next(L, -2) != 0)
             {
                 /* 'key' at -2, 'value' at -1 */
-                const char* name = lua_tostring(L, -2); /* key */
-                lua_getfield(L, -1, "keyframes");
-                QList<QPair<float, float> > keys;
-                lua_pushnil(L); /* the first key */
-                while(lua_next(L, -2) != 0)
-                {
-                    lua_getfield(L, -1, "time");
-                    float time = lua_tonumber(L, -1);
-                    lua_pop(L, 1); /* << time */
-                    lua_getfield(L, -1, "value");
-                    float value = lua_tonumber(L, -1);
-                    keys << qMakePair(time, value);
-                    lua_pop(L, 2); /* << value << value [leave key for next iteration */
-                }
-                p->avars[name] = keys;
-                lua_pop(L, 2);  /* << keyframes, pop value, leave key for next iteration */
+                p->avars << luaL_ref(L, LUA_REGISTRYINDEX); /* << value */
             }
-            lua_pop(L, 4);  /* << avars << item << container << type */
+            lua_pop(L, 1);  /* << avars  */
+
+            p->objref = luaL_ref(L, LUA_REGISTRYINDEX);    /* << item */
+            lua_pop(L, 2);  /* << container << type */
             return 0;
         }
-    } p = { type, container, name, "", avarsList };
+    } p = { type, container, name, "", QList<int>() };
     int res = lua_cpcall(L, C::call, &p);
     if(res != 0)
         mainEditor->clear();
@@ -121,12 +110,11 @@ void MainWindow::selectModel(const QModelIndex &index)
         currentType = type;
         currentContainer = container;
         currentName = name;
+        luaL_unref(L, LUA_REGISTRYINDEX, m_currentObjectRef);
+        m_currentObjectRef = p.objref;
     }
 
-    QList<AvarListItem> avars;
-    for(QMap<QString, QList<QPair<float, float> > >::iterator k = avarsList.begin(), end = avarsList.end(); k != end; ++k)
-        avars << AvarListItem(k.key(), k.value());
-    QAbstractItemModel* model = new AvarListModel(avars);
+    QAbstractItemModel* model = new AvarListModel(L, p.avars);
     QTableView* view = new QTableView;
     view = ui->avarTableView;
     QItemSelectionModel* old = view->selectionModel();
