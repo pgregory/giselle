@@ -1,19 +1,27 @@
 #include <QList>
+#include <QVector>
 
 #include "avarlistmodel.h"
 #include "luaerror.h"
 
+typedef struct _KeyFrame
+{
+    int ref;
+    int frame;
+    float value;
+} KeyFrame;
+
 AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, QObject* parent) :
             QAbstractTableModel(parent), m_L(L)
 {
+    _maxColumns = 0;
     // Build a list of AvarItems from the list of avars passed.
-    float max = 0.0f, min = 0.0f;
     for(QList<int>::const_iterator av = avars.begin(), end = avars.end(); av != end; ++av)
     {
         struct C
         {
             int avarRef;
-            QList<QPair<float, float> > keyframes;
+            QList<KeyFrame> keyframes;
             QString name;
             static int call(lua_State* L)
             {
@@ -23,22 +31,22 @@ AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, QObject* par
                 p->name = lua_tostring(L, -1);
                 lua_pop(L, 1);  /* << name */
                 lua_getfield(L, -1, "keyframes");
-                QList<QPair<float, float> > keys;
                 lua_pushnil(L); /* the first key */
                 while(lua_next(L, -2) != 0)
                 {
-                    lua_getfield(L, -1, "time");
-                    float time = lua_tonumber(L, -1);
-                    lua_pop(L, 1); /* << time */
-                    lua_getfield(L, -1, "value");
+                    lua_getfield(L, -1, "frame");
+                    int frame = lua_tointeger(L, -1);
+                    lua_getfield(L, -2, "value");
                     float value = lua_tonumber(L, -1);
-                    p->keyframes << qMakePair(time, value);
-                    lua_pop(L, 2); /* << kfvalue << value (leave key for next iteration) */
+                    lua_pop(L, 2); // << value << frame
+                    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+                    KeyFrame kf = { ref, frame, value };
+                    p->keyframes << kf;
                 }
                 lua_pop(L, 2); /* << keyframes << ref */
                 return 0;
             }
-        } p = { *av, QList<QPair<float, float> >() };
+        } p = { *av, QList<KeyFrame>(), "" };
         try
         {
             int res = lua_cpcall(L, C::call, &p);
@@ -50,26 +58,35 @@ AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, QObject* par
             std::cerr << e.what() <<std::endl;
         }
 
-        avarList << AvarListItem(m_L, *av, p.name, p.keyframes);
         // Work out how many columns by looking at all the avars.
-        QPair<float, float> kf;
+        _startFrame = _endFrame = 0;
+        KeyFrame kf;
         foreach(kf, p.keyframes)
         {
-            max = qMax(max, kf.first);
-            min = qMin(min, kf.first);
+            _endFrame = qMax(_endFrame, kf.frame);
+            _startFrame = qMin(_startFrame, kf.frame);
         }
+
+        // Now build a list of ints, over the span, filling in valid keyframes where available.
+        QVector<int> keyframes;
+
+        if(p.keyframes.size() > 0)
+        {
+            keyframes.insert(0, (_endFrame-_startFrame)+1, LUA_NOREF);
+            foreach(kf, p.keyframes)
+                keyframes.insert(kf.frame, kf.ref);
+            _maxColumns = (_endFrame - _startFrame) + 1;
+        }
+        avarList << AvarListItem(m_L, *av, p.name, keyframes);
     }
-    _startFrame = qRound(min);
-    _endFrame = qRound(max);
-    _maxColumns = (_endFrame - _startFrame) + 1;
 }
 
-int AvarListModel::rowCount(const QModelIndex& parent) const
+int AvarListModel::rowCount(const QModelIndex& /*parent*/) const
 {
     return avarList.count();
 }
 
-int AvarListModel::columnCount(const QModelIndex& parent) const
+int AvarListModel::columnCount(const QModelIndex& /*parent*/) const
 {
     return _maxColumns;
 }
@@ -86,13 +103,7 @@ QVariant AvarListModel::data(const QModelIndex & index, int role) const
     if(role == Qt::DisplayRole)
     {
         const AvarListItem& av = avarList.at(index.row());
-        QList<QPair<float, float> >::const_iterator kf = av.keyframes().begin(), end = av.keyframes().end();
-        while(kf->first < index.column() && kf != end)
-            ++kf;
-        if(kf != end && kf->first <= index.column())
-            return kf->second;
-        else
-            return QVariant();
+        return av.getKeyframeValue(index.column() + _startFrame);
     }
     else
         return QVariant();
@@ -129,17 +140,14 @@ Qt::ItemFlags AvarListModel::flags(const QModelIndex &index) const
         return Qt::ItemIsEnabled;
 
     const AvarListItem& av = avarList.at(index.row());
-    QList<QPair<float, float> >::const_iterator kf = av.keyframes().begin(), end = av.keyframes().end();
-    while(kf->first < index.column() && kf != end)
-        ++kf;
-    if(kf != end && kf->first <= index.column())
+    if(av.getKeyframeValue(index.column() + _startFrame).isValid())
         return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
     else
         return Qt::ItemIsEnabled;
 }
 
 
-bool AvarListModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool AvarListModel::setData(const QModelIndex &index, const QVariant &value, int /*role*/)
 {
     if(!index.isValid())
         return false;

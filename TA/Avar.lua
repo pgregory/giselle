@@ -1,7 +1,7 @@
 KeyFrame= Object:clone()
-function KeyFrame:create(time, value)
+function KeyFrame:create(frame, value)
 	local o = self:clone()
-	o.time = time
+    o.frame = math.floor(frame)
 	o.value = value
 	return o
 end
@@ -14,18 +14,18 @@ function Avar:__call(time)
 end
 
 function Avar:lininterp(time)
-	if time <= self.keyframes[1].time then
+    if time <= self.keyframes[1].frame then
 		return self.keyframes[1].value
-	elseif time >= self.keyframes[table.maxn(self.keyframes)].time then
+    elseif time >= self.keyframes[table.maxn(self.keyframes)].frame then
 		return self.keyframes[table.maxn(self.keyframes)].value
 	else
 		-- Calculate the correct point in the sequence of keyframes
 		local span = 1
-		while self.keyframes[span].time <= time and span <= table.maxn(self.keyframes) do span = span+1 end
+        while self.keyframes[span].frame <= time and span <= table.maxn(self.keyframes) do span = span+1 end
 		-- Now calculate the point within the span
-		if time == self.keyframes[span-1].time then return self.keyframes[span-1].value end
-		if time == self.keyframes[span].time then return self.keyframes[span].value end
-		local r = (time - self.keyframes[span-1].time)/(self.keyframes[span].time - self.keyframes[span-1].time)
+        if time == self.keyframes[span-1].frame then return self.keyframes[span-1].value end
+        if time == self.keyframes[span].frame then return self.keyframes[span].value end
+        local r = (time - self.keyframes[span-1].frame)/(self.keyframes[span].frame - self.keyframes[span-1].frame)
 		local v = self.keyframes[span-1].value + (self.keyframes[span].value - self.keyframes[span-1].value) * r
 		return v
 	end
