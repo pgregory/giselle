@@ -31,7 +31,10 @@ public slots:
     void endFrameChanged(int);
 
 private:
+    void populateModel();
+
     QList<AvarListItem> avarList;
+    QList<int>  m_avarRefs;
     int _maxColumns;
     lua_State* m_L;
     int _startFrame;

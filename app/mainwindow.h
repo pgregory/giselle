@@ -34,6 +34,8 @@ public slots:
     void acceptChanges();
     void doRender();
     void avarsChanged(const QModelIndex& a, const QModelIndex& b);
+    void startFrameChanged(int);
+    void endFrameChanged(int);
 
 private:
     Ui::MainWindow *ui;

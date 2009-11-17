@@ -15,6 +15,8 @@ extern "C" {
 #include "lualib.h"
 }
 
+#include "luaerror.h"
+
 
 MainWindow::MainWindow(lua_State *L, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL)
@@ -37,6 +39,8 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     QObject::connect(ui->actionRender, SIGNAL(triggered()), this, SLOT(doRender()));
 
     QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), ui->graphicsView, SLOT(timeChanged(int)));
+    QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), this, SLOT(startFrameChanged(int)));
+    QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), this, SLOT(endFrameChanged(int)));
 
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
@@ -100,7 +104,7 @@ void MainWindow::selectModel(const QModelIndex &index)
             lua_pop(L, 2);  /* << container << type */
             return 0;
         }
-    } p = { type, container, name, "", QList<int>() };
+    } p = { type, container, name, "", QList<int>(), 0 };
     int res = lua_cpcall(L, C::call, &p);
     if(res != 0)
         mainEditor->clear();
@@ -149,7 +153,12 @@ void MainWindow::acceptChanges()
                 return 0;
             }
         } p = { currentType, currentContainer, currentName, mainEditor->toPlainText().toAscii() };
-        /*int res = */lua_cpcall(L, C::call, &p);
+        int res = lua_cpcall(L, C::call, &p);
+        if( res != 0)
+        {
+            throw(LuaError(L));
+        }
+        ui->graphicsView->updateGL();
     }
 }
 
@@ -160,4 +169,14 @@ void MainWindow::doRender()
 void MainWindow::avarsChanged(const QModelIndex&, const QModelIndex&)
 {
     ui->graphicsView->updateGL();
+}
+
+void MainWindow::startFrameChanged(int start)
+{
+    ui->timeSlider->setMinimum(start);
+}
+
+void MainWindow::endFrameChanged(int end)
+{
+    ui->timeSlider->setMaximum(end);
 }
