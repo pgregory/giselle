@@ -79,7 +79,7 @@ void AvarListItem::setKeyframe(int index, float value)
 
 QVariant AvarListItem::getKeyframeValue(int index) const
 {
-    if(_keyframes[index] == LUA_NOREF)
+    if(_keyframes.size() <= index || _keyframes[index] == LUA_NOREF)
         return QVariant();
 
     struct C
@@ -106,5 +106,6 @@ QVariant AvarListItem::getKeyframeValue(int index) const
     catch(std::exception& e)
     {
         std::cerr << e.what() <<std::endl;
+        return QVariant();
     }
 }

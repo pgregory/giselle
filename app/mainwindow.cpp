@@ -114,12 +114,15 @@ void MainWindow::selectModel(const QModelIndex &index)
         m_currentObjectRef = p.objref;
     }
 
-    QAbstractItemModel* model = new AvarListModel(L, p.avars);
+    AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
     QTableView* view = new QTableView;
     view = ui->avarTableView;
     QItemSelectionModel* old = view->selectionModel();
     view->setModel(model);
     delete old;
+    QObject::connect(ui->avarTableView->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
+    QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
+    QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), model, SLOT(endFrameChanged(int)));
 }
 
 void MainWindow::acceptChanges()
@@ -152,4 +155,9 @@ void MainWindow::acceptChanges()
 
 void MainWindow::doRender()
 {
+}
+
+void MainWindow::avarsChanged(const QModelIndex&, const QModelIndex&)
+{
+    ui->graphicsView->updateGL();
 }

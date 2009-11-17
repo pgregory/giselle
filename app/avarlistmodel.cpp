@@ -11,7 +11,7 @@ typedef struct _KeyFrame
     float value;
 } KeyFrame;
 
-AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, QObject* parent) :
+AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, int startFrame, int endFrame, QObject* parent) :
             QAbstractTableModel(parent), m_L(L)
 {
     _maxColumns = 0;
@@ -58,21 +58,15 @@ AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, QObject* par
             std::cerr << e.what() <<std::endl;
         }
 
-        // Work out how many columns by looking at all the avars.
-        _startFrame = _endFrame = 0;
-        KeyFrame kf;
-        foreach(kf, p.keyframes)
-        {
-            _endFrame = qMax(_endFrame, kf.frame);
-            _startFrame = qMin(_startFrame, kf.frame);
-        }
-
+        _startFrame = startFrame;
+        _endFrame = endFrame;
         // Now build a list of ints, over the span, filling in valid keyframes where available.
         QVector<int> keyframes;
 
         if(p.keyframes.size() > 0)
         {
             keyframes.insert(0, (_endFrame-_startFrame)+1, LUA_NOREF);
+            KeyFrame kf;
             foreach(kf, p.keyframes)
                 keyframes.insert(kf.frame, kf.ref);
             _maxColumns = (_endFrame - _startFrame) + 1;
@@ -159,4 +153,26 @@ bool AvarListModel::setData(const QModelIndex &index, const QVariant &value, int
     av.setKeyframe(index.column() + _startFrame, value.toDouble());
     emit dataChanged(index, index);
     return true;
+}
+
+void AvarListModel::startFrameChanged(int start)
+{
+    bool insert = start < _startFrame;
+    if(!insert)
+        emit beginRemoveColumns(QModelIndex(), 0, start - _startFrame);
+    else
+        emit beginInsertColumns(QModelIndex(), start, _startFrame - start);
+    _startFrame = start;
+    _maxColumns = (_endFrame-_startFrame)+1;
+    if(!insert)
+        emit endRemoveColumns();
+    else
+        emit endInsertColumns();
+}
+
+
+void AvarListModel::endFrameChanged(int end)
+{
+//    _endFrame = end;
+//    _maxColumns = (_endFrame-_startFrame)+1;
 }

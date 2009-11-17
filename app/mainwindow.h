@@ -33,6 +33,7 @@ public slots:
     void selectModel(const QModelIndex& index);
     void acceptChanges();
     void doRender();
+    void avarsChanged(const QModelIndex& a, const QModelIndex& b);
 
 private:
     Ui::MainWindow *ui;

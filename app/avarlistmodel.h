@@ -16,7 +16,7 @@ class AvarListModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    AvarListModel(lua_State* L, const QList<int>& avars, QObject* parent = 0);
+    AvarListModel(lua_State* L, const QList<int>& avars, int startFrame, int endFrame, QObject* parent = 0);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const;
     int columnCount(const QModelIndex& parent = QModelIndex()) const;
@@ -26,12 +26,16 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
 
+public slots:
+    void startFrameChanged(int);
+    void endFrameChanged(int);
+
 private:
     QList<AvarListItem> avarList;
-    int _startFrame;
-    int _endFrame;
     int _maxColumns;
     lua_State* m_L;
+    int _startFrame;
+    int _endFrame;
 };
 
 #endif // AVARLISTMODEL_H
