@@ -29,18 +29,17 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     splitter = ui->splitterEditTree;
     splitter->setStretchFactor(1,1);
 
-    SceneTreeModel* sceneModel = new SceneTreeModel(L);
-    QTreeView* sceneTreeView = new QTreeView;
-    sceneTreeView = ui->sceneTreeView;
-    sceneTreeView->setModel(sceneModel);
+    populateTree();
 
-    QObject::connect(sceneTreeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(selectModel(QModelIndex)));
+    QObject::connect(ui->sceneTreeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(selectModel(QModelIndex)));
     QObject::connect(ui->actionAccept, SIGNAL(triggered()), this, SLOT(acceptChanges()));
     QObject::connect(ui->actionRender, SIGNAL(triggered()), this, SLOT(doRender()));
 
     QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), ui->graphicsView, SLOT(timeChanged(int)));
     QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), this, SLOT(startFrameChanged(int)));
     QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), this, SLOT(endFrameChanged(int)));
+
+    QObject::connect(ui->lineEdit, SIGNAL(returnPressed()), this, SLOT(runCommand()));
 
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
@@ -179,4 +178,45 @@ void MainWindow::startFrameChanged(int start)
 void MainWindow::endFrameChanged(int end)
 {
     ui->timeSlider->setMaximum(end);
+}
+
+
+void MainWindow::runCommand()
+{
+    QString command = ui->lineEdit->text();
+    try
+    {
+        struct C
+        {
+            QString comand;
+            static int call(lua_State *L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                luaL_dostring(L, p->comand.toAscii());
+                return 0;
+            }
+        } p = { command };
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+        {
+            throw(LuaError(L));
+        }
+    }
+    catch(std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+        return;
+    }
+    populateTree();
+    ui->lineEdit->clear();
+}
+
+void MainWindow::populateTree()
+{
+    SceneTreeModel* sceneModel = new SceneTreeModel(L);
+    QItemSelectionModel* old = ui->sceneTreeView->selectionModel();
+    ui->sceneTreeView->setModel(sceneModel);
+    delete old;
+
+    ui->sceneTreeView->setExpanded(sceneModel->index(0,0,QModelIndex()), true);
 }

@@ -36,8 +36,11 @@ public slots:
     void avarsChanged(const QModelIndex& a, const QModelIndex& b);
     void startFrameChanged(int);
     void endFrameChanged(int);
+    void runCommand();
 
 private:
+    void populateTree();
+
     Ui::MainWindow *ui;
     QSplitter* splitter;
     QTextEdit* mainEditor;
