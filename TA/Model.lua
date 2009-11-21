@@ -1,6 +1,8 @@
 Model = Renderable:clone()
 Model.group = true 
-Model.models = {}
+
+
+Models = {}
 
 function Model:generate(time)
     Renderable:pushState()
@@ -38,9 +40,21 @@ function Model:__call(name)
     function o:__call()
         self:create()
     end
-    Model.models[name] = o
+    Models[name] = o
     return o
 end
+
+Models_meta = {}
+function Models_meta:__index(key)
+    model = rawget(Models, key)
+    if model and type(model) == "table" then
+        return model
+    else
+        error("Model \""..tostring(key).."\" does not exist")
+    end
+end
+
+setmetatable(Models, Models_meta)
 
 return Model
 

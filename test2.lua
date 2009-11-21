@@ -41,7 +41,7 @@ scissor.segments = 5
 scissor.bladelength = 2
 scissor.bladewidth = 0.3
 scissor.bladethickness = 0.1
-scissor.blade = createBlade(scissor.bladelength, scissor.bladewidth, scissor.bladethickness)
+createBlade(scissor.bladelength, scissor.bladewidth, scissor.bladethickness)
 
 scissor:setBody(
 [[
@@ -52,10 +52,10 @@ for segment = 0, self.segments do
     local offset = self.bladelength * math.sin(math.rad(90 - angle))
     TransformBegin()
         Rotate(-angle, 0, 1, 0)
-        self.blade()
+        Models["blade"]()
         Rotate(2 * angle, 0, 1, 0)
         Translate(0, self.bladethickness, 0)
-        self.blade()
+        Models["blade"]()
     TransformEnd()
     Translate(0, 0, offset)
 end
@@ -63,13 +63,13 @@ end
 
 theWorld = World()
 function theWorld:body(time)
-    scissor()
+    Models["scissor"]()
 end
 
-theCamera = Camera("main")
-theCamera.pan = theCamera:avar("pan", {{0.0, 180.0}, {30.0, 270.0}})
-theCamera.dolly = theCamera:avar("dolly", {{0.0, 4.0}, {15.0, 4.0}, {30.0, 8.0}})
-theCamera:setBody(
+cam = Camera("main")
+cam.pan = cam:avar("pan", {{0.0, 180.0}, {30.0, 270.0}})
+cam.dolly = cam:avar("dolly", {{0.0, 4.0}, {15.0, 4.0}, {30.0, 8.0}})
+cam:setBody(
 [[
 Projection("perspective", {fov = 50})
 Translate(0,0,self.dolly(time))
@@ -78,7 +78,4 @@ Rotate(self.pan(time),0,1,0)
 Translate(0,0,-7)
 ]])
 
-
 theGLRenderer = GLRenderer:create("test")
-
-theGLRenderer:renderIt{world = theWorld, camera = theCamera, start = 15, stop = 15}

@@ -25,8 +25,7 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
     rootItem->appendChild(modelsItem);
 
     // Now fill in the models from the Lua state.
-    lua_getglobal(L, "Model");
-    lua_getfield(L, -1, "models");
+    lua_getglobal(L, "Models");
     lua_pushnil(L); /* the first key */
     while(lua_next(L, -2) != 0)
     {
@@ -39,7 +38,7 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
         lua_pop(L, 1);
         lua_pop(L, 1);  /* pop value, leave key for next iteration */
     }
-    lua_pop(L, 2);
+    lua_pop(L, 1);
 
     QList<QVariant> cameraNodeData;
     cameraNodeData << "Cameras";
@@ -47,8 +46,7 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
     rootItem->appendChild(camerasItem);
 
     // Now fill in the cameras from the Lua state.
-    lua_getglobal(L, "Camera");
-    lua_getfield(L, -1, "cameras");
+    lua_getglobal(L, "Cameras");
     lua_pushnil(L); /* the first key */
     while(lua_next(L, -2) != 0)
     {

@@ -47,7 +47,6 @@ private:
     LuaHighlighter* highlighter;
     lua_State* L;
     QString currentType;
-    QString currentContainer;
     QString currentName;
     int     m_currentObjectRef;
 };

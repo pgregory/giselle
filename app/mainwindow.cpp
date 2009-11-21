@@ -7,6 +7,7 @@
 #include "scenetreeitem.h"
 
 #include <QMap>
+#include <QMessageBox>
 
 extern "C" {
 #include "lua.h"
@@ -53,7 +54,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::selectModel(const QModelIndex &index)
 {
-    QString type, container;
+    QString type;
     SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
     QString name = item->data(0).toString();
     QMap<QString, QList<QPair<float, float> > > avarsList;
@@ -61,12 +62,10 @@ void MainWindow::selectModel(const QModelIndex &index)
     switch(item->type())
     {
         case MODEL:
-            type = "Model";
-            container = "models";
+            type = "Models";
             break;
         case CAMERA:
-            type = "Camera";
-            container = "cameras";
+            type = "Cameras";
             break;
         default:
             return;
@@ -75,7 +74,6 @@ void MainWindow::selectModel(const QModelIndex &index)
     struct C
     {
         QString type;
-        QString container;
         QString name;
         QString source;
         QList<int> avars;
@@ -84,7 +82,6 @@ void MainWindow::selectModel(const QModelIndex &index)
         {
             C* p = static_cast<C*>(lua_touserdata(L, 1));
             lua_getglobal(L, p->type.toAscii());
-            lua_getfield(L, -1, p->container.toAscii());
             lua_getfield(L, -1, p->name.toAscii());
             lua_getfield(L, -1, "bodySource");
             const char* source = lua_tostring(L, -1);
@@ -100,10 +97,10 @@ void MainWindow::selectModel(const QModelIndex &index)
             lua_pop(L, 1);  /* << avars  */
 
             p->objref = luaL_ref(L, LUA_REGISTRYINDEX);    /* << item */
-            lua_pop(L, 2);  /* << container << type */
+            lua_pop(L, 1);  /* << type */
             return 0;
         }
-    } p = { type, container, name, "", QList<int>(), 0 };
+    } p = { type, name, "", QList<int>(), 0 };
     int res = lua_cpcall(L, C::call, &p);
     if(res != 0)
         mainEditor->clear();
@@ -111,7 +108,6 @@ void MainWindow::selectModel(const QModelIndex &index)
     {
         mainEditor->setText(p.source);
         currentType = type;
-        currentContainer = container;
         currentName = name;
         luaL_unref(L, LUA_REGISTRYINDEX, m_currentObjectRef);
         m_currentObjectRef = p.objref;
@@ -130,28 +126,26 @@ void MainWindow::selectModel(const QModelIndex &index)
 
 void MainWindow::acceptChanges()
 {
-    if(currentType != "" && currentContainer != "" && currentName != "")
+    if(currentType != "" && currentName != "")
     {
         struct C
         {
             QString type;
-            QString container;
             QString name;
             QString source;
             static int call(lua_State *L)
             {
                 C* p = static_cast<C*>(lua_touserdata(L, 1));
                 lua_getglobal(L, p->type.toAscii());    // Get the type object.
-                lua_getfield(L, -1, p->container.toAscii());    // Get the container.
                 lua_getfield(L, -1, p->name.toAscii()); // Get the chosen item from the container.
                 lua_getfield(L, -1, "setBody"); // Get the setBody function.
                 lua_pushvalue(L, -2);   // Push self.
                 lua_pushstring(L, p->source.toAscii()); // Push new body text.
                 lua_pcall(L, 2, 0, 0);
-                lua_pop(L, 3);  /* << item << container << type */
+                lua_pop(L, 2);  /* << item << type */
                 return 0;
             }
-        } p = { currentType, currentContainer, currentName, mainEditor->toPlainText().toAscii() };
+        } p = { currentType, currentName, mainEditor->toPlainText().toAscii() };
         int res = lua_cpcall(L, C::call, &p);
         if( res != 0)
         {
@@ -192,7 +186,10 @@ void MainWindow::runCommand()
             static int call(lua_State *L)
             {
                 C* p = static_cast<C*>(lua_touserdata(L, 1));
-                luaL_dostring(L, p->comand.toAscii());
+                int res = luaL_dostring(L, p->comand.toAscii());
+                if(res != 0)
+                    throw(LuaError(L));
+
                 return 0;
             }
         } p = { command };
@@ -204,7 +201,9 @@ void MainWindow::runCommand()
     }
     catch(std::exception& e)
     {
-        std::cout << e.what() << std::endl;
+        QMessageBox msgBox;
+        msgBox.setText(e.what());
+        msgBox.exec();
         return;
     }
     populateTree();
@@ -218,5 +217,7 @@ void MainWindow::populateTree()
     ui->sceneTreeView->setModel(sceneModel);
     delete old;
 
+    // Set the Models and Cameras nodes as expanded.
     ui->sceneTreeView->setExpanded(sceneModel->index(0,0,QModelIndex()), true);
+    ui->sceneTreeView->setExpanded(sceneModel->index(1,0,QModelIndex()), true);
 }

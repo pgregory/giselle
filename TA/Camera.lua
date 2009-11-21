@@ -1,5 +1,5 @@
 Camera = Model:clone()
-Camera.cameras = {}
+Cameras = {}
 
 function Camera:first()
 	if #self.cameras == 0 then
@@ -40,7 +40,19 @@ function Camera:__call(name)
 	local c = Camera:clone()
 	c.name = name
 	c.avars = {}
-	Camera.cameras[name] = c
+        Cameras[name] = c
 	return c
 end
 
+Cameras_meta = {}
+
+function Cameras_meta:__index(key)
+    camera = rawget(self, key)
+    if camera and type(camera) == "table" then
+        return camera
+    else
+        error("Camera \""..tostring(key).."\" does not exist")
+    end
+end
+
+setmetatable(Cameras, Cameras_meta)

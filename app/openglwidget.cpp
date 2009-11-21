@@ -23,8 +23,10 @@ void OpenGLWidget::paintGL()
                 lua_newtable(L);
                 lua_getglobal(L, "theWorld");
                 lua_setfield(L, -2, "world");
-                lua_getglobal(L, "theCamera");
-                lua_setfield(L, -2, "camera");
+                lua_getglobal(L, "Cameras");
+                lua_getfield(L, -1, "main");
+                lua_setfield(L, -3, "camera");
+                lua_pop(L, 1);  // << Cameras
                 lua_pushinteger(L, p->time);
                 lua_setfield(L, -2, "start");
                 lua_pushinteger(L, p->time);
