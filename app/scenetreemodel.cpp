@@ -18,48 +18,55 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
 {
     QList<QVariant> rootData;
     rootData << "Scene";
-    rootItem = new SceneTreeItem(rootData, ROOT);
+    rootItem = new SceneTreeItem(L, rootData, ROOT);
     QList<QVariant> modelNodeData;
     modelNodeData << "Models";
-    SceneTreeItem* modelsItem = new SceneTreeItem(modelNodeData, MODELS, rootItem);
+    SceneTreeItem* modelsItem = new SceneTreeItem(L, modelNodeData, MODELS, LUA_NOREF, rootItem);
     rootItem->appendChild(modelsItem);
 
     // Now fill in the models from the Lua state.
-    lua_getglobal(L, "Models");
-    lua_pushnil(L); /* the first key */
-    while(lua_next(L, -2) != 0)
+    lua_getglobal(L, "Models");                         // Models
+    lua_pushnil(L); /* the first key */                 // Models - nil
+    while(lua_next(L, -2) != 0)                         // Models - key - value
     {
         /* 'key' at -2, 'value' at -1 */
-        lua_getfield(L, -1, "name");
+        lua_getfield(L, -1, "name");                    // Models - key - value - name
         const char* name = lua_tostring(L, -1);
+        lua_pop(L, 1);                                  // Models - key - value
+        int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);   // Models - key
         QList<QVariant> modelData;
         modelData << name;
-        modelsItem->appendChild(new SceneTreeItem(modelData, MODEL, modelsItem));
-        lua_pop(L, 1);
-        lua_pop(L, 1);  /* pop value, leave key for next iteration */
+        modelsItem->appendChild(new SceneTreeItem(L, modelData, MODEL, nodeRef, modelsItem));
     }
-    lua_pop(L, 1);
+    lua_pop(L, 1);                              // --
 
     QList<QVariant> cameraNodeData;
     cameraNodeData << "Cameras";
-    SceneTreeItem* camerasItem = new SceneTreeItem(cameraNodeData, CAMERAS, rootItem);
+    SceneTreeItem* camerasItem = new SceneTreeItem(L, cameraNodeData, CAMERAS, LUA_NOREF, rootItem);
     rootItem->appendChild(camerasItem);
 
     // Now fill in the cameras from the Lua state.
-    lua_getglobal(L, "Cameras");
-    lua_pushnil(L); /* the first key */
-    while(lua_next(L, -2) != 0)
+    lua_getglobal(L, "Cameras");                         // Cameras
+    lua_pushnil(L); /* the first key */                  // Cameras - nil
+    while(lua_next(L, -2) != 0)                          // Cameras - key - value
     {
         /* 'key' at -2, 'value' at -1 */
-        lua_getfield(L, -1, "name");
+        lua_getfield(L, -1, "name");                     // Cameras - key - value - name
         const char* name = lua_tostring(L, -1);
+        lua_pop(L, 1);                                   // Cameras - key - value
+        int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Cameras - key
         QList<QVariant> cameraData;
         cameraData << name;
-        camerasItem->appendChild(new SceneTreeItem(cameraData, CAMERA, camerasItem));
-        lua_pop(L, 1);
-        lua_pop(L, 1);  /* pop value, leave key for next iteration */
+        camerasItem->appendChild(new SceneTreeItem(L, cameraData, CAMERA, nodeRef, camerasItem));
     }
-    lua_pop(L, 2);
+    lua_pop(L, 1);                              // --
+
+    // Add a world node.
+    QList<QVariant> worldData;
+    worldData << "World";
+    lua_getglobal(L, "World");
+    int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    rootItem->appendChild(new SceneTreeItem(L, worldData, WORLD, nodeRef, rootItem));
 }
 
 SceneTreeModel::~SceneTreeModel()

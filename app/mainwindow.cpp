@@ -54,63 +54,52 @@ MainWindow::~MainWindow()
 
 void MainWindow::selectModel(const QModelIndex &index)
 {
-    QString type;
     SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
-    QString name = item->data(0).toString();
+    int nodeRef = item->nodeRef();
     QMap<QString, QList<QPair<float, float> > > avarsList;
-
-    switch(item->type())
-    {
-        case MODEL:
-            type = "Models";
-            break;
-        case CAMERA:
-            type = "Cameras";
-            break;
-        default:
-            return;
-    }
 
     struct C
     {
-        QString type;
-        QString name;
         QString source;
         QList<int> avars;
         int     objref;
         static int call(lua_State *L)
         {
             C* p = static_cast<C*>(lua_touserdata(L, 1));
-            lua_getglobal(L, p->type.toAscii());
-            lua_getfield(L, -1, p->name.toAscii());
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
+            if(lua_isnil(L, -1))
+            {
+                lua_pushstring(L, "Error, item is nil!");
+                lua_error(L);
+            }
             lua_getfield(L, -1, "bodySource");
             const char* source = lua_tostring(L, -1);
             p->source = source;
             lua_pop(L, 1);  /* << bodySource */
             lua_getfield(L, -1, "avars");
-            lua_pushnil(L); /* the first key */
-            while(lua_next(L, -2) != 0)
+            if(!lua_isnil(L, -1))
             {
-                /* 'key' at -2, 'value' at -1 */
-                p->avars << luaL_ref(L, LUA_REGISTRYINDEX); /* << value */
+                lua_pushnil(L); /* the first key */
+                while(lua_next(L, -2) != 0)
+                {
+                    /* 'key' at -2, 'value' at -1 */
+                    p->avars << luaL_ref(L, LUA_REGISTRYINDEX); /* << value */
+                }
             }
             lua_pop(L, 1);  /* << avars  */
-
-            p->objref = luaL_ref(L, LUA_REGISTRYINDEX);    /* << item */
-            lua_pop(L, 1);  /* << type */
             return 0;
         }
-    } p = { type, name, "", QList<int>(), 0 };
+    } p = { "", QList<int>(), nodeRef };
     int res = lua_cpcall(L, C::call, &p);
     if(res != 0)
         mainEditor->clear();
     else
     {
         mainEditor->setText(p.source);
-        currentType = type;
-        currentName = name;
         luaL_unref(L, LUA_REGISTRYINDEX, m_currentObjectRef);
-        m_currentObjectRef = p.objref;
+        // Duplicate the reference for our ownership.
+        lua_rawgeti(L, LUA_REGISTRYINDEX, nodeRef);
+        m_currentObjectRef = luaL_ref(L, LUA_REGISTRYINDEX);
     }
 
     AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
@@ -126,26 +115,24 @@ void MainWindow::selectModel(const QModelIndex &index)
 
 void MainWindow::acceptChanges()
 {
-    if(currentType != "" && currentName != "")
+    if(m_currentObjectRef != LUA_NOREF)
     {
         struct C
         {
-            QString type;
-            QString name;
             QString source;
+            int objref;
             static int call(lua_State *L)
             {
                 C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_getglobal(L, p->type.toAscii());    // Get the type object.
-                lua_getfield(L, -1, p->name.toAscii()); // Get the chosen item from the container.
+                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
                 lua_getfield(L, -1, "setBody"); // Get the setBody function.
                 lua_pushvalue(L, -2);   // Push self.
                 lua_pushstring(L, p->source.toAscii()); // Push new body text.
                 lua_pcall(L, 2, 0, 0);
-                lua_pop(L, 2);  /* << item << type */
+                lua_pop(L, 1);  /* << item */
                 return 0;
             }
-        } p = { currentType, currentName, mainEditor->toPlainText().toAscii() };
+        } p = { mainEditor->toPlainText().toAscii(), m_currentObjectRef };
         int res = lua_cpcall(L, C::call, &p);
         if( res != 0)
         {

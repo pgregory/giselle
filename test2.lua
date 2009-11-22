@@ -61,10 +61,10 @@ for segment = 0, self.segments do
 end
 ]])
 
-theWorld = World()
-function theWorld:body(time)
-    Models["scissor"]()
-end
+World:setBody(
+[[
+Models["scissor"]()
+]])
 
 cam = Camera("main")
 cam.pan = cam:avar("pan", {{0.0, 180.0}, {30.0, 270.0}})

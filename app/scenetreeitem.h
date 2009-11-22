@@ -4,6 +4,11 @@
 #include <QList>
 #include <QVariant>
 
+extern "C" {
+#include "lua.h"
+#include "lauxlib.h"
+}
+
 enum _TreeItemType
 {
     ROOT,
@@ -11,6 +16,7 @@ enum _TreeItemType
     CAMERAS,
     MODEL,
     CAMERA,
+    WORLD,
 };
 
 typedef _TreeItemType TreeItemType;
@@ -18,7 +24,7 @@ typedef _TreeItemType TreeItemType;
 class SceneTreeItem
 {
 public:
-    SceneTreeItem(const QList<QVariant> &data, TreeItemType type, SceneTreeItem *parent = 0);
+    SceneTreeItem(lua_State* L, const QList<QVariant> &data, TreeItemType type, int nodeRef = LUA_NOREF, SceneTreeItem *parent = 0);
     ~SceneTreeItem();
 
     void appendChild(SceneTreeItem *child);
@@ -30,12 +36,18 @@ public:
     int row() const;
     SceneTreeItem *parent();
     TreeItemType type() const;
+    int nodeRef() const
+    {
+        return m_nodeRef;
+    }
 
 private:
     QList<SceneTreeItem*> childItems;
     QList<QVariant> itemData;
     TreeItemType itemType;
     SceneTreeItem *parentItem;
+    int m_nodeRef;
+    lua_State*  m_L;
  };
 
 

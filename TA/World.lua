@@ -25,8 +25,8 @@ function World:render(renderer, atTime)
 	end
 end
 
-function World:__call()
-	local w = World:clone()
-	w.avars = {}
-	return w
+function World:setBody(string)
+    local func = assert(loadstring("return function(self, time) "..string.." end"))
+    self.body = func()
+    self.bodySource = string
 end

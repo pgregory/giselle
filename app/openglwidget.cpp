@@ -21,7 +21,7 @@ void OpenGLWidget::paintGL()
                 lua_getfield(L, -1, "renderIt");
                 lua_pushvalue(L, -2);
                 lua_newtable(L);
-                lua_getglobal(L, "theWorld");
+                lua_getglobal(L, "World");
                 lua_setfield(L, -2, "world");
                 lua_getglobal(L, "Cameras");
                 lua_getfield(L, -1, "main");
