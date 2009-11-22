@@ -47,32 +47,66 @@ QString& AvarListItem::name()
 
 void AvarListItem::setKeyframe(int index, float value)
 {
-    if(_keyframes[index] == LUA_NOREF)
-        return;
-
-    struct C
+    if(_keyframes[index] != LUA_NOREF)
     {
-        int keyRef;
-        float value;
-        static int call(lua_State* L)
+        struct C
         {
-            C* p = static_cast<C*>(lua_touserdata(L, 1));
-            lua_rawgeti(L, LUA_REGISTRYINDEX, p->keyRef);
-            lua_pushnumber(L, p->value);
-            lua_setfield(L, -2, "value");
-            lua_pop(L, 1); /* << keyref */
-            return 0;
+            int keyRef;
+            float value;
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                lua_rawgeti(L, LUA_REGISTRYINDEX, p->keyRef);
+                lua_pushnumber(L, p->value);
+                lua_setfield(L, -2, "value");
+                lua_pop(L, 1); /* << keyref */
+                return 0;
+            }
+        } p = { _keyframes[index], value };
+        try
+        {
+            int res = lua_cpcall(m_L, C::call, &p);
+            if(res != 0)
+                throw(LuaError(m_L));
         }
-    } p = { _keyframes[index], value };
-    try
-    {
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
+        catch(std::exception& e)
+        {
+            std::cerr << e.what() <<std::endl;
+        }
     }
-    catch(std::exception& e)
+    else
     {
-        std::cerr << e.what() <<std::endl;
+        struct C
+        {
+            int avarRef;
+            int frame;
+            float value;
+            int keyRef;
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarRef);
+                lua_getfield(L, -1, "addKeyframe");
+                lua_pushvalue(L, -2);   // self
+                lua_pushinteger(L, p->frame);
+                lua_pushnumber(L, p->value);
+                lua_call(L, 3, 1);
+                p->keyRef = luaL_ref(L, LUA_REGISTRYINDEX);
+                lua_pop(L, 1);
+                return 0;
+            }
+        } p = { m_avarRef, index, value, 0 };
+        try
+        {
+            int res = lua_cpcall(m_L, C::call, &p);
+            if(res != 0)
+                throw(LuaError(m_L));
+        }
+        catch(std::exception& e)
+        {
+            std::cerr << e.what() <<std::endl;
+        }
+        _keyframes[index] = p.keyRef;
     }
 }
 

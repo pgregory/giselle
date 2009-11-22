@@ -81,11 +81,11 @@ Qt::ItemFlags AvarListModel::flags(const QModelIndex &index) const
     if(index.row() >= avarList.size())
         return Qt::ItemIsEnabled;
 
-    const AvarListItem& av = avarList.at(index.row());
-    if(av.getKeyframeValue(index.column() + _startFrame).isValid())
+//    const AvarListItem& av = avarList.at(index.row());
+//    if(av.getKeyframeValue(index.column() + _startFrame).isValid())
         return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
-    else
-        return Qt::ItemIsEnabled;
+//    else
+//        return Qt::ItemIsEnabled;
 }
 
 

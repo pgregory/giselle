@@ -46,4 +46,12 @@ function Avar:create(name, keyframes)
 end
 
 
+function Avar:addKeyframe(frame, value)
+    kf = Keyframe:create(frame, value)
+    table.insert(self.keyframes, kf)
+    table.sort(self.keyframes, function(a,b) return a.frame < b.frame end)
+    return kf
+end
+
+
 return Avar
