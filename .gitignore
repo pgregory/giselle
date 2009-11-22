@@ -6,3 +6,5 @@ lua/debug
 lua/release
 luagl/debug
 luagl/release
+app/moc_*.cpp
+*.pro.user
