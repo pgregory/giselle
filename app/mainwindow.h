@@ -37,6 +37,8 @@ public slots:
     void startFrameChanged(int);
     void endFrameChanged(int);
     void runCommand();
+    void save();
+    void load();
 
 private:
     void populateTree();

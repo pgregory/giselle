@@ -56,11 +56,11 @@ static int pmain (lua_State *L)
             throw(LuaError(L));
 
         // Load a simple test lua file for development purposes.
-        QDir dir(QUOTEME(ROOT_DIR));
-        QString testLua = dir.filePath("test2.lua");
-        status = luaL_dofile(L, testLua.toAscii());
-        if(status != 0)
-            throw(LuaError(L));
+        //QDir dir(QUOTEME(ROOT_DIR));
+        //QString testLua = dir.filePath("test2.lua");
+        //status = luaL_dofile(L, testLua.toAscii());
+        //if(status != 0)
+        //    throw(LuaError(L));
     }
 
     catch(std::exception & e)

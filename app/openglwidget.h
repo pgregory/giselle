@@ -2,6 +2,7 @@
 #define OPENGLWIDGET_H
 
 #include <QGLWidget>
+#include <QMessageBox>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
@@ -9,6 +10,7 @@ extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 }
+#include "LuaError.h"
 
 class OpenGLWidget : public QGLWidget
 {
@@ -19,11 +21,7 @@ public:
             :QGLWidget(parent), m_time(0)
     {}
 
-    void initialiseLua(lua_State* L)
-    {
-        m_L = L;
-    }
-
+    void initialiseLua(lua_State* L);
     QSize sizeHint() const
     {
         return QSize(320,240);
@@ -60,6 +58,7 @@ protected:
 private:
     lua_State* m_L;
     int        m_time;
+    int        m_glRendererRef;
 };
 
 #endif // OPENGLWIDGET_H

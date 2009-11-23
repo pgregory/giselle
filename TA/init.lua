@@ -1,9 +1,5 @@
 -- C Modules
 --require('ri')
---require('iuplua')
---require('iupluagl')
---require('luagl')
---require('luaglu')
 
 -- Lua Modules
 require('TA/Object')
@@ -15,5 +11,5 @@ require('TA/Camera')
 require('TA/Renderer')
 require('TA/RenderMan')
 require('TA/GLRenderer')
-
-
+require('TA/tablesave')
+require('TA/Serialize')

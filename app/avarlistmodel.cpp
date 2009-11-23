@@ -172,17 +172,17 @@ void AvarListModel::populateModel()
         // Now build a list of ints, over the span, filling in valid keyframes where available.
         QVector<int> keyframes;
 
+        keyframes.insert(0, (_endFrame-_startFrame)+1, LUA_NOREF);
         if(p.keyframes.size() > 0)
         {
-            keyframes.insert(0, (_endFrame-_startFrame)+1, LUA_NOREF);
             KeyFrame kf;
             foreach(kf, p.keyframes)
             {
                 if(kf.frame >= _startFrame && kf.frame <= _endFrame)
                     keyframes.insert(kf.frame-_startFrame, kf.ref);
             }
-            _maxColumns = (_endFrame - _startFrame) + 1;
         }
+        _maxColumns = (_endFrame - _startFrame) + 1;
         avarList << AvarListItem(m_L, *av, p.name, keyframes);
     }
 }

@@ -1,17 +1,18 @@
-KeyFrame= Object:clone()
+KeyFrame= {}
 function KeyFrame:create(frame, value)
-	local o = self:clone()
-    o.frame = math.floor(frame)
+        local o = {}
+        o.frame = math.floor(frame)
 	o.value = value
 	return o
 end
 
-Avar = Object:clone()
+Avar = {}
 function Avar:__call(time)
 	if self.interpolator == nil then
 		return Avar.lininterp(self,time)
 	end
 end
+Avar.__index = Avar
 
 function Avar:lininterp(time)
     if time <= self.keyframes[1].frame then
@@ -31,8 +32,16 @@ function Avar:lininterp(time)
 	end
 end
 
+function Avar:addKeyframe(frame, value)
+    kf = KeyFrame:create(frame, value)
+    table.insert(self.keyframes, kf)
+    table.sort(self.keyframes, function(a,b) return a.frame < b.frame end)
+    return kf
+end
+
+
 function Avar:create(name, keyframes)
-	local o = Avar:clone()
+        local o = {}
 	o.keyframes = {}
         if #keyframes > 0 then
             table.sort(keyframes, function(a,b) return a[1] < b[1] end)
@@ -41,16 +50,8 @@ function Avar:create(name, keyframes)
             end
 	end
 	o.name = name
-	setmetatable(o, self)
+        setmetatable(o, Avar)
 	return o
-end
-
-
-function Avar:addKeyframe(frame, value)
-    kf = Keyframe:create(frame, value)
-    table.insert(self.keyframes, kf)
-    table.sort(self.keyframes, function(a,b) return a.frame < b.frame end)
-    return kf
 end
 
 

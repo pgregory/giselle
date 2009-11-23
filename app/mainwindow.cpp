@@ -8,6 +8,7 @@
 
 #include <QMap>
 #include <QMessageBox>
+#include <QFileDialog>
 
 extern "C" {
 #include "lua.h"
@@ -42,6 +43,9 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
 
     QObject::connect(ui->lineEdit, SIGNAL(returnPressed()), this, SLOT(runCommand()));
 
+    QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(save()));
+    QObject::connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(load()));
+
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
     highlighter = new LuaHighlighter(mainEditor->document());
@@ -54,6 +58,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::selectModel(const QModelIndex &index)
 {
+    if(!index.isValid())
+        return;
+
     SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
     int nodeRef = item->nodeRef();
     QMap<QString, QList<QPair<float, float> > > avarsList;
@@ -194,6 +201,7 @@ void MainWindow::runCommand()
         return;
     }
     populateTree();
+    selectModel(ui->sceneTreeView->currentIndex());
     ui->lineEdit->clear();
 }
 
@@ -207,4 +215,70 @@ void MainWindow::populateTree()
     // Set the Models and Cameras nodes as expanded.
     ui->sceneTreeView->setExpanded(sceneModel->index(0,0,QModelIndex()), true);
     ui->sceneTreeView->setExpanded(sceneModel->index(1,0,QModelIndex()), true);
+}
+
+void MainWindow::save()
+{
+    QString name = QFileDialog::getSaveFileName(this, "Save File", "", "Animator Files(*.ta)");
+    try
+    {
+        struct C
+        {
+            QString name;
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, -1));
+                lua_getglobal(L, "saveAll");        // saveAll
+                lua_pushstring(L, p->name.toAscii());// saveAll - name
+                lua_call(L, 1, 0);                  // --
+
+                return 0;
+            }
+        } p = { name };
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+        {
+            throw(LuaError(L));
+        }
+    }
+    catch(std::exception& e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(e.what());
+        msgBox.exec();
+    }
+}
+
+
+void MainWindow::load()
+{
+    QString name = QFileDialog::getOpenFileName(this, "Load File", "", "Animator Files(*.ta)");
+    try
+    {
+        struct C
+        {
+            QString name;
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, -1));
+                lua_getglobal(L, "loadAll");        // loadAll
+                lua_pushstring(L, p->name.toAscii());// loadAll - name
+                lua_call(L, 1, 0);                  // table - result
+
+                return 0;
+            }
+        } p = { name };
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+        {
+            throw(LuaError(L));
+        }
+    }
+    catch(std::exception& e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(e.what());
+        msgBox.exec();
+    }
+    populateTree();
 }

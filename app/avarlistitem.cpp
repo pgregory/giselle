@@ -85,14 +85,14 @@ void AvarListItem::setKeyframe(int index, float value)
             static int call(lua_State* L)
             {
                 C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarRef);
-                lua_getfield(L, -1, "addKeyframe");
-                lua_pushvalue(L, -2);   // self
-                lua_pushinteger(L, p->frame);
-                lua_pushnumber(L, p->value);
-                lua_call(L, 3, 1);
-                p->keyRef = luaL_ref(L, LUA_REGISTRYINDEX);
-                lua_pop(L, 1);
+                lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarRef);      // Avar
+                lua_getfield(L, -1, "addKeyframe");                 // Avar - addKeyframe
+                lua_pushvalue(L, -2);   // self                     // Avar - addKeyframe - Avar
+                lua_pushinteger(L, p->frame);                       // Avar - addKeyframe - Avar - frame
+                lua_pushnumber(L, p->value);                        // Avar - addKeyframe - Avar - frame - value
+                lua_call(L, 3, 1);                                  // Avar - kf
+                p->keyRef = luaL_ref(L, LUA_REGISTRYINDEX);         // Avar
+                lua_pop(L, 1);                                      // --
                 return 0;
             }
         } p = { m_avarRef, index, value, 0 };
