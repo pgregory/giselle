@@ -110,7 +110,7 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
     renderableFormat.setFontWeight(QFont::Bold);
     QStringList renderablePatterns;
     renderablePatterns << "WorldBegin" << "WorldEnd" << "TransformBegin" << "TransformEnd"
-                       << "Translate" << "Rotate"
+                       << "Translate" << "Rotate" << "Scale"
                        << "Cylinder" << "Sphere" << "Disk" << "PatchMesh"
                        << "Polygon"
                        << "Projection";

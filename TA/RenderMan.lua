@@ -18,7 +18,10 @@ function RenderMan:create(name)
 	function tab:Translate()
 		ri.Translate(self.x, self.y, self.z)
 	end
-	function tab:Rotate()
+    function tab:Scale()
+        ri.Scale(self.x, self.y, self.z)
+    end
+    function tab:Rotate()
 		ri.Rotate(self.angle, self.x, self.y, self.z)
 	end
 	function tab:Cylinder()

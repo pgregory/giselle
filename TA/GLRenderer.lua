@@ -19,7 +19,10 @@ function GLRenderer:create(name)
 	function tab:Translate()
 		gl.Translate(self.x, self.y, self.z)
 	end
-	function tab:Rotate()
+    function tab:Scale()
+        gl.Scale(self.x, self.y, self.z)
+    end
+    function tab:Rotate()
 		gl.Rotate(self.angle, self.x, self.y, self.z)
 	end
 	function tab:Cylinder()

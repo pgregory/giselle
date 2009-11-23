@@ -139,7 +139,10 @@ function Renderer:create(name)
 	function tab:Translate()
 		print("Translate "..self.x.." "..self.y.." "..self.z)
 	end
-	function tab:Rotate()
+    function tab:Scale()
+        print("Scale "..self.x.." "..self.y.." "..self.z)
+    end
+    function tab:Rotate()
 		print("Rotate "..self.angle.." "..self.x.." "..self.y.." "..self.z)
 	end
 	function tab:Cylinder()

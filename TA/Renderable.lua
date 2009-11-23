@@ -85,6 +85,30 @@ function Translate:isEqual(other)
 	return false
 end
 
+Scale = Renderable:clone()
+Scale.x = 0
+Scale.y = 0
+Scale.z = 0
+Scale.renderop = "Scale"
+function Scale:__call(x, y, z)
+    local o = self:create()
+    o.x = x
+    o.y = y
+    o.z = z
+    return o
+end
+function Scale:isEqual(other)
+    if not Renderable.isEqual(self,other) then
+        return false
+    elseif self.x == other.x and
+           self.y == other.y and
+           self.z == other.z then
+        return true
+    end
+    return false
+end
+
+
 Rotate = Renderable:clone()
 Rotate.renderop = "Rotate"
 Rotate.angle = 0
