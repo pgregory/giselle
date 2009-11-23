@@ -3,6 +3,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "avarlistmodel.h"
+#include "avartableview.h"
 #include "scenetreemodel.h"
 #include "scenetreeitem.h"
 
@@ -110,7 +111,7 @@ void MainWindow::selectModel(const QModelIndex &index)
     }
 
     AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
-    QTableView* view = new QTableView;
+    AvarTableView* view = new AvarTableView;
     view = ui->avarTableView;
     QItemSelectionModel* old = view->selectionModel();
     view->setModel(model);
@@ -182,7 +183,7 @@ void MainWindow::runCommand()
                 C* p = static_cast<C*>(lua_touserdata(L, 1));
                 int res = luaL_dostring(L, p->comand.toAscii());
                 if(res != 0)
-                    throw(LuaError(L));
+                    lua_error(L);
 
                 return 0;
             }

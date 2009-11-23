@@ -10,7 +10,7 @@ extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 }
-#include "LuaError.h"
+#include "luaerror.h"
 
 class OpenGLWidget : public QGLWidget
 {

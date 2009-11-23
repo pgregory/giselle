@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     luahighlighter.cpp \
     avarlistitem.cpp \
     glwindow.cpp \
-    openglwidget.cpp
+    openglwidget.cpp \
+    avartableview.cpp
 HEADERS += mainwindow.h \
     avarlistmodel.h \
     scenetreemodel.h \
@@ -37,6 +38,7 @@ HEADERS += mainwindow.h \
     avarlistitem.h \
     glwindow.h \
     openglwidget.h \
-    luaerror.h
+    luaerror.h \
+    avartableview.h
 FORMS += mainwindow.ui \
     glwindow.ui
