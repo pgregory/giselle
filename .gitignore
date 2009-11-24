@@ -8,3 +8,5 @@ luagl/debug
 luagl/release
 app/moc_*.cpp
 *.pro.user
+*.o
+*.so*

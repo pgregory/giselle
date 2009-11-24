@@ -143,3 +143,9 @@ QVariant AvarListItem::getKeyframeValue(int index) const
         return QVariant();
     }
 }
+
+
+int AvarListItem::getKeyframeRef(int index) const
+{
+    return _keyframes[index];
+}

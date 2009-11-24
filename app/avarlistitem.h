@@ -23,6 +23,11 @@ public:
     QString& name();
     void setKeyframe(int index, float value);
     QVariant getKeyframeValue(int index) const;
+    int getKeyframeRef(int index) const;
+    int avarRef() const
+    {
+        return m_avarRef;
+    }
 
 private:
     QString _name;

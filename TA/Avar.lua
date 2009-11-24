@@ -40,6 +40,15 @@ function Avar:addKeyframe(frame, value)
 end
 
 
+function Avar:removeKeyframe(kf)
+    for i,v in ipairs(self.keyframes) do
+        if rawequal(v, kf) then
+            table.remove(self.keyframes, i)
+            return
+        end
+    end
+end
+
 function Avar:create(name, keyframes)
         local o = {}
 	o.keyframes = {}

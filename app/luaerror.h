@@ -42,7 +42,7 @@ inline LuaError::LuaError(lua_State * L)
 }
 
 inline LuaError::LuaError(const LuaError & other)
-    : m_L(other.m_L), m_lua_resource(other.m_lua_resource)
+    : std::exception(other), m_L(other.m_L), m_lua_resource(other.m_lua_resource)
 {
 
 }

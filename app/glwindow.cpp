@@ -41,7 +41,7 @@ void GLWindow::setModeWire()
         {
             static int call(lua_State* L)
             {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                //C* p = static_cast<C*>(lua_touserdata(L, 1));
                 lua_getglobal(L, "GLRenderer");
                 lua_pushstring(L, "LINES");
                 lua_setfield(L, -2, "mode");
@@ -69,7 +69,7 @@ void GLWindow::setModeSolid()
         {
             static int call(lua_State* L)
             {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                //C* p = static_cast<C*>(lua_touserdata(L, 1));
                 lua_getglobal(L, "GLRenderer");
                 lua_pushstring(L, "SOLID");
                 lua_setfield(L, -2, "mode");

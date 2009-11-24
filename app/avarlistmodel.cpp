@@ -186,3 +186,17 @@ void AvarListModel::populateModel()
         avarList << AvarListItem(m_L, *av, p.name, keyframes);
     }
 }
+
+
+const AvarListItem& AvarListModel::avarListItem(QModelIndex& index) const
+{
+    const AvarListItem& av = avarList.at(index.row());
+    return av;
+}
+
+
+int AvarListModel::keyFrameRef(QModelIndex& index) const
+{
+    const AvarListItem& av = avarListItem(index);
+    return av.getKeyframeRef(index.column());
+}

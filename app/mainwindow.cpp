@@ -113,6 +113,7 @@ void MainWindow::selectModel(const QModelIndex &index)
     AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
     AvarTableView* view = new AvarTableView;
     view = ui->avarTableView;
+    view->initialiseLua(L);
     QItemSelectionModel* old = view->selectionModel();
     view->setModel(model);
     delete old;

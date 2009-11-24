@@ -25,6 +25,12 @@ public:
                         int role = Qt::DisplayRole) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+    const AvarListItem& avarListItem(QModelIndex &index) const;
+    int keyFrameRef(QModelIndex& index) const;
+    void refresh()
+    {
+        populateModel();
+    }
 
 public slots:
     void startFrameChanged(int);
