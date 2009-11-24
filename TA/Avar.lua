@@ -15,6 +15,9 @@ end
 Avar.__index = Avar
 
 function Avar:lininterp(time)
+    if #self.keyframes == 0 then
+        return 0
+    end
     if time <= self.keyframes[1].frame then
 		return self.keyframes[1].value
     elseif time >= self.keyframes[table.maxn(self.keyframes)].frame then

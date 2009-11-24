@@ -126,28 +126,37 @@ void MainWindow::acceptChanges()
 {
     if(m_currentObjectRef != LUA_NOREF)
     {
-        struct C
+        try
         {
-            QString source;
-            int objref;
-            static int call(lua_State *L)
+            struct C
             {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
-                lua_getfield(L, -1, "setBody"); // Get the setBody function.
-                lua_pushvalue(L, -2);   // Push self.
-                lua_pushstring(L, p->source.toAscii()); // Push new body text.
-                lua_pcall(L, 2, 0, 0);
-                lua_pop(L, 1);  /* << item */
-                return 0;
+                QString source;
+                int objref;
+                static int call(lua_State *L)
+                {
+                    C* p = static_cast<C*>(lua_touserdata(L, 1));
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
+                    lua_getfield(L, -1, "setBody"); // Get the setBody function.
+                    lua_pushvalue(L, -2);   // Push self.
+                    lua_pushstring(L, p->source.toAscii()); // Push new body text.
+                    lua_call(L, 2, 0);
+                    lua_pop(L, 1);  /* << item */
+                    return 0;
+                }
+            } p = { mainEditor->toPlainText().toAscii(), m_currentObjectRef };
+            int res = lua_cpcall(L, C::call, &p);
+            if( res != 0)
+            {
+                throw(LuaError(L));
             }
-        } p = { mainEditor->toPlainText().toAscii(), m_currentObjectRef };
-        int res = lua_cpcall(L, C::call, &p);
-        if( res != 0)
-        {
-            throw(LuaError(L));
+            ui->graphicsView->updateGL();
         }
-        ui->graphicsView->updateGL();
+        catch(std::exception& e)
+        {
+            QMessageBox msgBox;
+            msgBox.setText(e.what());
+            msgBox.exec();
+        }
     }
 }
 

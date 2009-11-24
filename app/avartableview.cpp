@@ -58,4 +58,5 @@ void AvarTableView::contextMenuEvent(QContextMenuEvent* e)
             static_cast<AvarListModel*>(model())->refresh();
         }
     }
+    delete menu;
 }

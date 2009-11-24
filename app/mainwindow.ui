@@ -226,6 +226,9 @@
      </item>
      <item>
       <widget class="QSpinBox" name="timeMax">
+       <property name="maximum">
+        <number>9999</number>
+       </property>
        <property name="value">
         <number>30</number>
        </property>
