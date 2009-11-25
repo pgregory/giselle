@@ -1,5 +1,7 @@
 World = Model:clone()
 World.time = 0
+World.startTime = 0
+World.endTime = 50
 
 function World:generate(time)
 	Renderable:pushState()

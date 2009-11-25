@@ -1,5 +1,5 @@
 GLRenderer = Object:clone()
-GLRenderer.mode = 'LINES'
+GLRenderer.mode = 'SOLID'
 
 function GLRenderer:create(name)
 	local r, tab = Renderer:create(name)
@@ -64,7 +64,7 @@ function GLRenderer:create(name)
 	end
 	function tab:Polygon()
         if GLRenderer.mode == 'LINES' then
-            gl.Begin('LINES')
+            gl.Begin('LINE_LOOP')
         else
             gl.Begin('POLYGON')
         end

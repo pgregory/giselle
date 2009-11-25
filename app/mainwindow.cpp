@@ -171,12 +171,72 @@ void MainWindow::avarsChanged(const QModelIndex&, const QModelIndex&)
 
 void MainWindow::startFrameChanged(int start)
 {
+    // Set the time slider range.
     ui->timeSlider->setMinimum(start);
+    // Update the value stored on World in Lua
+    try
+    {
+        struct C
+        {
+            int frame;
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, -1));
+                lua_getglobal(L, "World");          // World
+                if(!lua_isnil(L, -1))
+                {
+                    lua_pushinteger(L, p->frame);       // World - frame
+                    lua_setfield(L, -2, "startTime");   // World
+                }
+                lua_pop(L, 1);                      // --
+                return 0;
+            }
+        } p = { start };
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+            throw(LuaError(L));
+    }
+    catch(std::exception& e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(e.what());
+        msgBox.exec();
+    }
 }
 
 void MainWindow::endFrameChanged(int end)
 {
+    // Update the time slider range.
     ui->timeSlider->setMaximum(end);
+    // Update the value stored on World in Lua
+    try
+    {
+        struct C
+        {
+            int frame;
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, -1));
+                lua_getglobal(L, "World");          // World
+                if(!lua_isnil(L, -1))
+                {
+                    lua_pushinteger(L, p->frame);       // World - frame
+                    lua_setfield(L, -2, "endTime");     // World
+                }
+                lua_pop(L, 1);                      // --
+                return 0;
+            }
+        } p = { end };
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+            throw(LuaError(L));
+    }
+    catch(std::exception& e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(e.what());
+        msgBox.exec();
+    }
 }
 
 
@@ -269,12 +329,20 @@ void MainWindow::load()
         struct C
         {
             QString name;
+            int     startframe;
+            int     endframe;
             static int call(lua_State* L)
             {
                 C* p = static_cast<C*>(lua_touserdata(L, -1));
                 lua_getglobal(L, "loadAll");        // loadAll
                 lua_pushstring(L, p->name.toAscii());// loadAll - name
                 lua_call(L, 1, 0);                  // table - result
+                lua_getglobal(L, "World");          // World
+                lua_getfield(L, -1, "startTime");   // World - startTime
+                lua_getfield(L, -2, "endTime");     // World - startTime - endTime
+                p->startframe = lua_tointeger(L, -2);
+                p->endframe = lua_tointeger(L, -1);
+                lua_pop(L, 3);                      // --
 
                 return 0;
             }
@@ -284,6 +352,8 @@ void MainWindow::load()
         {
             throw(LuaError(L));
         }
+        ui->timeMin->setValue(p.startframe);
+        ui->timeMax->setValue(p.endframe);
     }
     catch(std::exception& e)
     {
