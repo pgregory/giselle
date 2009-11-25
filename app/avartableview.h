@@ -18,9 +18,17 @@ public:
     }
 
     void contextMenuEvent(QContextMenuEvent* e);
+    void mousePressEvent(QMouseEvent* event);
+    void mouseMoveEvent(QMouseEvent* event);
+    void mouseReleaseEvent(QMouseEvent* event);
 
 private:
     lua_State* m_L;
+    bool        m_dragging;
+    QModelIndex m_draggingIndex;
+    double      m_draggingStartValue;
+    QPoint      m_draggingStartPoint;
+    double      m_scaleFactor;
 };
 
 #endif // AVARTABLEVIEW_H

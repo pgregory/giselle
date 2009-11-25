@@ -1,5 +1,5 @@
 GLRenderer = Object:clone()
-GLRenderer.mode = 'SOLID'
+GLRenderer.mode = 'LINES'
 
 function GLRenderer:create(name)
 	local r, tab = Renderer:create(name)

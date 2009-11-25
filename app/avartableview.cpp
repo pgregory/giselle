@@ -11,7 +11,7 @@ extern "C" {
 #include "lua.h"
 }
 
-AvarTableView::AvarTableView(QWidget* parent) : QTableView(parent)
+AvarTableView::AvarTableView(QWidget* parent) : QTableView(parent), m_dragging(false), m_scaleFactor(0.01)
 {
 }
 
@@ -59,4 +59,38 @@ void AvarTableView::contextMenuEvent(QContextMenuEvent* e)
         }
     }
     delete menu;
+}
+
+
+void AvarTableView::mousePressEvent(QMouseEvent* event)
+{
+    m_draggingIndex = indexAt(event->pos());
+    if(m_draggingIndex.isValid())
+    {
+        m_dragging = true;
+        m_draggingStartPoint = event->pos();
+        m_draggingStartValue = model()->data(m_draggingIndex, Qt::DisplayRole).toDouble();
+        //grabMouse();
+    }
+    QTableView::mousePressEvent(event);
+}
+
+void AvarTableView::mouseMoveEvent(QMouseEvent* event)
+{
+    if(m_dragging)
+    {
+        QPoint p = event->pos();
+        double diff = p.y() - m_draggingStartPoint.y();
+        diff *= m_scaleFactor;
+        model()->setData(m_draggingIndex, m_draggingStartValue + diff, Qt::DisplayRole);
+    }
+}
+
+void AvarTableView::mouseReleaseEvent(QMouseEvent* event)
+{
+    if(m_dragging)
+    {
+        m_dragging = false;
+        //releaseMouse();
+    }
 }

@@ -127,7 +127,7 @@
         </sizepolicy>
        </property>
        <property name="editTriggers">
-        <set>QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+        <set>QAbstractItemView::DoubleClicked</set>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -136,7 +136,7 @@
         <enum>QAbstractItemView::SingleSelection</enum>
        </property>
        <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>30</number>
+        <number>50</number>
        </attribute>
        <attribute name="horizontalHeaderStretchLastSection">
         <bool>false</bool>
@@ -146,6 +146,9 @@
        </attribute>
        <attribute name="verticalHeaderDefaultSectionSize">
         <number>18</number>
+       </attribute>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>50</number>
        </attribute>
       </widget>
      </item>
@@ -206,33 +209,46 @@
     <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
-      <widget class="QSpinBox" name="timeMin">
-       <property name="value">
-        <number>0</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="timeSlider">
-       <property name="maximum">
-        <number>30</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="timeMax">
-       <property name="maximum">
-        <number>9999</number>
-       </property>
-       <property name="value">
-        <number>30</number>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QSpinBox" name="timeMin">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="maximum">
+          <number>9999</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="timeSlider">
+         <property name="maximum">
+          <number>30</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="timeMax">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="maximum">
+          <number>9999</number>
+         </property>
+         <property name="value">
+          <number>30</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
