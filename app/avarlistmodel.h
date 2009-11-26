@@ -35,6 +35,7 @@ public:
 public slots:
     void startFrameChanged(int);
     void endFrameChanged(int);
+    void timeChanged(int);
 
 private:
     void populateModel();
@@ -45,6 +46,7 @@ private:
     lua_State* m_L;
     int _startFrame;
     int _endFrame;
+    int m_currentTime;
 };
 
 #endif // AVARLISTMODEL_H

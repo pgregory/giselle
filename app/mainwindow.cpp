@@ -120,6 +120,7 @@ void MainWindow::selectModel(const QModelIndex &index)
     QObject::connect(ui->avarTableView->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
     QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
     QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), model, SLOT(endFrameChanged(int)));
+    QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), model, SLOT(timeChanged(int)));
 }
 
 void MainWindow::acceptChanges()

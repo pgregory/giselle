@@ -1,5 +1,6 @@
 #include <QList>
 #include <QVector>
+#include <QColor>
 
 #include "avarlistmodel.h"
 #include "luaerror.h"
@@ -12,7 +13,7 @@ typedef struct _KeyFrame
 } KeyFrame;
 
 AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, int startFrame, int endFrame, QObject* parent) :
-            QAbstractTableModel(parent), m_L(L)
+            QAbstractTableModel(parent), m_L(L), m_currentTime(0)
 {
     _startFrame = startFrame;
     _endFrame = endFrame;
@@ -46,6 +47,13 @@ QVariant AvarListModel::data(const QModelIndex & index, int role) const
     {
         const AvarListItem& av = avarList.at(index.row());
         return av.getKeyframeValue(index.column());
+    }
+    else if(role == Qt::BackgroundRole)
+    {
+        if(index.column() == m_currentTime)
+            return QColor(Qt::green);
+        else
+            return QColor(Qt::white);
     }
     else
         return QVariant();
@@ -118,6 +126,13 @@ void AvarListModel::endFrameChanged(int end)
     _maxColumns = (_endFrame-_startFrame)+1;
     reset();
     populateModel();
+}
+
+
+void AvarListModel::timeChanged(int time)
+{
+    m_currentTime = time;
+    emit dataChanged(QModelIndex(), QModelIndex());
 }
 
 
