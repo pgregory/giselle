@@ -131,8 +131,13 @@ void AvarListModel::endFrameChanged(int end)
 
 void AvarListModel::timeChanged(int time)
 {
+    QModelIndex olds = index(0, m_currentTime);
+    QModelIndex olde = index(rowCount(), m_currentTime);
     m_currentTime = time;
-    emit dataChanged(QModelIndex(), QModelIndex());
+    QModelIndex news = index(0, m_currentTime);
+    QModelIndex newe = index(rowCount(), m_currentTime);
+    emit dataChanged(olds, olde);
+    emit dataChanged(news, newe);
 }
 
 
