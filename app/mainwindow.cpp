@@ -7,9 +7,12 @@
 #include "scenetreemodel.h"
 #include "scenetreeitem.h"
 
+#include <QCoreApplication>
 #include <QMap>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QSettings>
+#include <QCloseEvent>
 
 extern "C" {
 #include "lua.h"
@@ -24,6 +27,10 @@ extern "C" {
 MainWindow::MainWindow(lua_State *L, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL)
 {
+    QCoreApplication::setApplicationName("TheAnimator");
+    QCoreApplication::setOrganizationName("Aqsis Team");
+    QCoreApplication::setOrganizationDomain("aqsis.org");
+
     ui->setupUi(this);
 
     ui->graphicsView->initialiseLua(L);
@@ -50,6 +57,8 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
     highlighter = new LuaHighlighter(mainEditor->document());
+
+    readSettings();
 }
 
 MainWindow::~MainWindow()
@@ -363,4 +372,34 @@ void MainWindow::load()
         msgBox.exec();
     }
     populateTree();
+}
+
+
+void MainWindow::writeSettings()
+{
+    QSettings settings;
+
+    settings.beginGroup("MainWindow");
+    settings.setValue("size", size());
+    settings.setValue("pos", pos());
+    settings.setValue("state", saveState());
+    settings.endGroup();
+}
+
+void MainWindow::readSettings()
+{
+    QSettings settings;
+
+    settings.beginGroup("MainWindow");
+    resize(settings.value("size", QSize(815, 600)).toSize());
+    move(settings.value("pos", QPoint(200, 200)).toPoint());
+    restoreState(settings.value("state", QByteArray()).toByteArray());
+    settings.endGroup();
+}
+
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    writeSettings();
+    event->accept();
 }

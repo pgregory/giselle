@@ -40,6 +40,12 @@ public slots:
     void save();
     void load();
 
+    void writeSettings();
+    void readSettings();
+
+protected:
+    void closeEvent(QCloseEvent*);
+
 private:
     void populateTree();
 
