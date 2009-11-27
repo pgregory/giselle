@@ -130,6 +130,8 @@ void MainWindow::selectModel(const QModelIndex &index)
     QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
     QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), model, SLOT(endFrameChanged(int)));
     QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), model, SLOT(timeChanged(int)));
+    QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), view, SLOT(timeChanged(int)));
+    QObject::connect(ui->lockCheck, SIGNAL(stateChanged(int)), view, SLOT(lock(int)));
 }
 
 void MainWindow::acceptChanges()

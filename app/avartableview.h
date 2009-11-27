@@ -9,8 +9,11 @@ extern "C" {
 
 class AvarTableView : public QTableView
 {
+   Q_OBJECT
+
 public:
     AvarTableView(QWidget* parent = 0);
+    virtual ~AvarTableView() {}
 
     void initialiseLua(lua_State* L)
     {
@@ -22,6 +25,10 @@ public:
     void mouseMoveEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent* event);
 
+public slots:
+    void timeChanged(int);
+    void lock(int);
+
 private:
     lua_State* m_L;
     bool        m_dragging;
@@ -29,6 +36,7 @@ private:
     double      m_draggingStartValue;
     QPoint      m_draggingStartPoint;
     double      m_scaleFactor;
+    int         m_locked;
 };
 
 #endif // AVARTABLEVIEW_H

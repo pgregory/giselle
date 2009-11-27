@@ -6,12 +6,14 @@
 #include <QContextMenuEvent>
 #include <QModelIndex>
 #include <QMessageBox>
+#include <QCheckBox>
 
 extern "C" {
 #include "lua.h"
 }
 
-AvarTableView::AvarTableView(QWidget* parent) : QTableView(parent), m_dragging(false), m_scaleFactor(0.01)
+AvarTableView::AvarTableView(QWidget* parent) : QTableView(parent),
+        m_dragging(false), m_scaleFactor(0.01), m_locked(false)
 {
 }
 
@@ -93,4 +95,17 @@ void AvarTableView::mouseReleaseEvent(QMouseEvent* event)
         m_dragging = false;
         //releaseMouse();
     }
+}
+
+
+void AvarTableView::timeChanged(int time)
+{
+    if(m_locked)
+        scrollTo(model()->index(0, time), QAbstractItemView::PositionAtCenter);
+    repaint();
+}
+
+void AvarTableView::lock(int state)
+{
+    m_locked = state;
 }
