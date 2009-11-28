@@ -24,7 +24,11 @@ function Model:setBody(string)
     self.bodySource = string
 end
 
-function Model:__call(name)
+--[[
+Static utility functions
+]]--
+
+function Model.new(name)
     if type(name) ~= "string" then
         error("Must specify a name for a model")
         return

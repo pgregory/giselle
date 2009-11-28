@@ -32,7 +32,11 @@ function Camera:render(renderer, atTime)
 	end
 end
 
-function Camera:__call(name)
+--[[
+Static utility functions.
+]]--
+
+function Camera.new(name)
 	if type(name) ~= "string" then
 		error("Must specify a name for the camera")
 		return
@@ -45,9 +49,6 @@ function Camera:__call(name)
 end
 
 
---[[
-    Namespace functions for convenience in the language.
-  ]]
 function Camera.aim(from, to)
     if type(from) ~= "table" or type(to) ~= "table" then
         error("Parameters not valid")
