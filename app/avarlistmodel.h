@@ -17,6 +17,7 @@ class AvarListModel : public QAbstractTableModel
 
 public:
     AvarListModel(lua_State* L, const QList<int>& avars, int startFrame, int endFrame, QObject* parent = 0);
+    virtual ~AvarListModel() {}
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const;
     int columnCount(const QModelIndex& parent = QModelIndex()) const;

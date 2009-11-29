@@ -21,6 +21,8 @@ namespace Ui
     class MainWindow;
 }
 
+class AvarListModel;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -57,6 +59,7 @@ private:
     QString currentType;
     QString currentName;
     int     m_currentObjectRef;
+    AvarListModel* m_currentAvarModel;
 };
 
 #endif // MAINWINDOW_H

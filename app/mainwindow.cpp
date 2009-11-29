@@ -25,7 +25,7 @@ extern "C" {
 
 
 MainWindow::MainWindow(lua_State *L, QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL)
+    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL), m_currentAvarModel(0)
 {
     QCoreApplication::setApplicationName("TheAnimator");
     QCoreApplication::setOrganizationName("Aqsis Team");
@@ -34,6 +34,7 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     ui->setupUi(this);
 
     ui->graphicsView->initialiseLua(L);
+    ui->avarTableView->initialiseLua(L);
 
     splitter = new QSplitter;
     splitter = ui->splitterEditTree;
@@ -53,6 +54,9 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
 
     QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(save()));
     QObject::connect(ui->actionLoad, SIGNAL(triggered()), this, SLOT(load()));
+
+    QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), ui->avarTableView, SLOT(timeChanged(int)));
+    QObject::connect(ui->lockCheck, SIGNAL(stateChanged(int)), ui->avarTableView, SLOT(lock(int)));
 
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
@@ -120,18 +124,13 @@ void MainWindow::selectModel(const QModelIndex &index)
     }
 
     AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
-    AvarTableView* view = new AvarTableView;
-    view = ui->avarTableView;
-    view->initialiseLua(L);
-    QItemSelectionModel* old = view->selectionModel();
-    view->setModel(model);
-    delete old;
-    QObject::connect(ui->avarTableView->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
+    ui->avarTableView->setModel(model);
+    QObject::connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
     QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
     QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), model, SLOT(endFrameChanged(int)));
     QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), model, SLOT(timeChanged(int)));
-    QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), view, SLOT(timeChanged(int)));
-    QObject::connect(ui->lockCheck, SIGNAL(stateChanged(int)), view, SLOT(lock(int)));
+    delete(m_currentAvarModel);
+    m_currentAvarModel = model;
 }
 
 void MainWindow::acceptChanges()
