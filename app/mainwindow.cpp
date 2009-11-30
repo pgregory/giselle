@@ -256,20 +256,7 @@ void MainWindow::runCommand()
     QString command = ui->lineEdit->text();
     try
     {
-        struct C
-        {
-            QString comand;
-            static int call(lua_State *L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                int res = luaL_dostring(L, p->comand.toAscii());
-                if(res != 0)
-                    lua_error(L);
-
-                return 0;
-            }
-        } p = { command };
-        int res = lua_cpcall(L, C::call, &p);
+        int res = luaL_dostring(L, command.toAscii());
         if(res != 0)
         {
             throw(LuaError(L));
