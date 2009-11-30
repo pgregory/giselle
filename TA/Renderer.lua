@@ -58,17 +58,22 @@ function Renderer:renderIt(options)
 		if options.motion_blur then
 			self:shutter(frame, frame+options.motion_blur)
 			f2 = frame+1
+
 			-- Camera
-			options.camera:render(self, {f1, f2})
+			local renderables options.camera:getRenderables({f1, f2})
+			self:renderRenderables(renderables, {f1, f2})
 
 			-- World
-			options.world:render(self, {f1, f2})
+			renderables = options.world:getRenderables({f1, f2})
+			self:renderRenderables(renderables, {f1, f2})
 		else
 			-- Camera
-			options.camera:render(self, f1)
+			local renderables = options.camera:getRenderables(f1)
+			self:renderRenderables(renderables, {f1})
 
 			-- World
-			options.world:render(self, f1)
+			renderables = options.world:getRenderables(f1)
+			self:renderRenderables(renderables, {f1})
 		end
 		self:frameEnd()
 	end
@@ -81,7 +86,7 @@ end
 --   						  each frame.
 --   parameter: times		  a list of times, one time for each frame.
 --]]
-function Renderer:renderRenderables(renderables, times)
+function Renderer:renderRenderables(renderables, times, filter)
 	for i,ro in ipairs(renderables[1]) do
 		if ro.group then
 			local subRenderables = {}
@@ -91,27 +96,29 @@ function Renderer:renderRenderables(renderables, times)
 				local fn = renderables[frame][i]:generate(times[frame])
 				table.insert(subRenderables, fn)
 			end
-			self:renderRenderables(subRenderables, times)
+			self:renderRenderables(subRenderables, times, filter)
 		else
-			local same = true
-			for frame = 2, #renderables do
-				if not ro:isEquivalent(renderables[frame][i]) then
-					print("Error: the rob lists for frames 1 and " .. frame .. " aren't compatible")
-				end
-				if not ro:isEqual(renderables[frame][i]) then
-					same = false
-					break
-				end
-			end
-			if same then
-				self:render(ro)
-			else
-				ri.MotionBegin(times)
-				self:render(ro)
+			if ( filter == nil or type(filter) ~= "function" ) or filter(ro) then
+				local same = true
 				for frame = 2, #renderables do
-					self:render(renderables[frame][i])
+					if not ro:isEquivalent(renderables[frame][i]) then
+						print("Error: the rob lists for frames 1 and " .. frame .. " aren't compatible")
+					end
+					if not ro:isEqual(renderables[frame][i]) then
+						same = false
+						break
+					end
 				end
-				ri.MotionEnd()
+				if same then
+					self:render(ro)
+				else
+					ri.MotionBegin(times)
+					self:render(ro)
+					for frame = 2, #renderables do
+						self:render(renderables[frame][i])
+					end
+					ri.MotionEnd()
+				end
 			end
 		end
 	end
@@ -162,6 +169,12 @@ function Renderer:create(name)
 	end
 	function tab:Projection()
 		print("Projection "..self.type.." "..tostring(self.paramList))
+	end
+	function tab:CoordinateSystem()
+		print("CoordinateSystem "..self.name)
+	end
+	function tab:CoordSysTransform()
+		print("CoordSysTransform "..self.name)
 	end
 	return r, tab
 end

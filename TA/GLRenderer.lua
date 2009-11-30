@@ -80,6 +80,15 @@ function GLRenderer:create(name)
 		glu.Perspective(40, 320/240, 1, 5000)
 		gl.Scale(1, 1, -1)
 	end
+	function tab:CoordinateSystem()
+		local a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p = gl.Get('MODELVIEW_MATRIX')	
+		local mat = {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
+		CoordinateFrame.set(self.name, mat)
+	end
+	function tab:CoordSysTransform()
+		local mat = CoordinateFrame.get(self.name)
+		gl.LoadMatrix(mat)
+	end
 
 	function r:start(options)
 		gl.Clear('COLOR_BUFFER_BIT,DEPTH_BUFFER_BIT') -- Clear Screen And Depth Buffer

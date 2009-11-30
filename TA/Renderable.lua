@@ -299,6 +299,33 @@ function Projection:isEqual(other)
 	return true
 end
 
+
+CoordinateSystem = Renderable:clone()
+CoordinateSystem.renderop = "CoordinateSystem"
+CoordinateSystem.name = ""
+function CoordinateSystem:__call(name)
+	local o = self:create()
+	o.name = name
+	return o
+end
+function CoordinateSystem:isEqual(other)
+	return true
+end
+
+
+CoordSysTransform = Renderable:clone()
+CoordSysTransform.renderop = "CoordSysTransform"
+CoordSysTransform.name = ""
+function CoordSysTransform:__call(name)
+	local o = self:create()
+	o.name = name
+	return o
+end
+function CoordSysTransform:isEqual(other)
+	return true
+end
+
+
 --[[ Render a set of frames.
 --   parameter: renderables   a list of lists of Renderables, one list for
 --   						  each frame.

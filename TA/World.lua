@@ -13,17 +13,17 @@ function World:generate(time)
 	return Renderable:popState()
 end
 
-function World:render(renderer, atTime)
+function World:getRenderables(atTime)
 	if type(atTime) == "table" then
 		local renderables = {}
 		for i,t in ipairs(atTime) do
 			local fn = self:generate(t)
 			table.insert(renderables, fn)
 		end
-		renderer:renderRenderables(renderables, atTime)
+		return renderables
 	else
 		local f1 = self:generate(atTime or self.time)
-		renderer:renderRenderables({f1}, {atTime or self.time})
+		return {f1}
 	end
 end
 

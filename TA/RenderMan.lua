@@ -42,6 +42,12 @@ function RenderMan:create(name)
 	function tab:Polygon()
 		ri.Polygon(#self.paramList["P"]/3, self.paramList)
 	end
+	function tab:CoordinateSystem()
+		ri.CoordinateSystem(self.name)
+	end
+	function tab:CoordSysTransform()
+		ri.CoordSysTransform(self.name)
+	end
 
 	function r:start(options)
 		local file = "test.rib"

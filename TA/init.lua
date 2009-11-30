@@ -4,6 +4,7 @@
 -- Lua Modules
 require('TA/Object')
 require('TA/Renderable')
+require('TA/CoordinateFrame')
 require('TA/Avar')
 require('TA/Model')
 require('TA/World')
@@ -13,3 +14,4 @@ require('TA/RenderMan')
 require('TA/GLRenderer')
 require('TA/tablesave')
 require('TA/Serialize')
+require('TA/matrix')
