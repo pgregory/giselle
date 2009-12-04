@@ -3024,11 +3024,15 @@ static int luagl_load_matrix(lua_State *L)
   GLdouble *m;
 
   /* test argument type and the number of arguments in the array, must be 16 values */
-  if(!lua_istable(L, 1) || luaL_getn(L, 1) < 16)
+  int len = luaL_getn(L, 1);
+  if(!lua_istable(L, 1) || (len != 16 && len != 4))
     LUAGL_SHOWERROR("incorrect argument to function 'gl.LoadMatrix'");
 
   /* get argument */
-  luagl_get_arrayd(L, 1, &m);
+  if(len == 16)
+      luagl_get_arrayd(L, 1, &m);
+  else
+      luagl_get_array2d_pointer(L, 1, &m, &len);
 
   /* call opengl function */
   glLoadMatrixd(m);

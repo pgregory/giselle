@@ -1,29 +1,88 @@
 GLRenderer = Object:clone()
 GLRenderer.mode = 'LINES'
+GLRenderer.matrixStack = {}
 
 function GLRenderer:create(name)
 	local r, tab = Renderer:create(name)
+	r.matrixStack = {}
+	table.insert(r.matrixStack, matrix(4, "I"))
+
+	function r:printMVP()
+		local a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p = gl.Get('MODELVIEW_MATRIX')	
+		local matx = matrix(4, 4)
+		matx[1][1] = a
+		matx[1][2] = b
+		matx[1][3] = c
+		matx[1][4] = d
+		matx[2][1] = e
+		matx[2][2] = f
+		matx[2][3] = g
+		matx[2][4] = h
+		matx[3][1] = i
+		matx[3][2] = j
+		matx[3][3] = k
+		matx[3][4] = l
+		matx[4][1] = m
+		matx[4][2] = n
+		matx[4][3] = o
+		matx[4][4] = p
+		io.stderr:write(matrix.tostring(matx).."\n")
+	end
 
 	function tab:WorldBegin()
 		gl.MatrixMode('MODELVIEW')
 		gl.LoadIdentity()
+		table.insert(r.matrixStack, matrix(4, "I"))
 	end
 	function tab:WorldEnd()
 	end
 	function tab:TransformBegin()
 		gl.PushMatrix()
+		currMat = r.matrixStack[#r.matrixStack]
+		table.insert(r.matrixStack, matrix(currMat))
 	end
 	function tab:TransformEnd()
 		gl.PopMatrix()
+		table.remove(r.matrixStack)
 	end
 	function tab:Translate()
 		gl.Translate(self.x, self.y, self.z)
+		local transMat = matrix(4, "I")
+		transMat[4][1] = self.x
+		transMat[4][2] = self.y
+		transMat[4][3] = self.z
+		r.matrixStack[#r.matrixStack] = matrix.mul(transMat, r.matrixStack[#r.matrixStack])
 	end
     function tab:Scale()
         gl.Scale(self.x, self.y, self.z)
+		local scaleMat = matrix(4, "I")
+		scaleMat[1][1] = self.x
+		scaleMat[2][2] = self.y
+		scaleMat[3][3] = self.z
+		r.matrixStack[#r.matrixStack] = matrix.mul(scaleMat, r.matrixStack[#r.matrixStack])
     end
     function tab:Rotate()
 		gl.Rotate(self.angle, self.x, self.y, self.z)
+		local rotMat = matrix(4, "I")
+		local c = math.cos(math.rad(self.angle))
+		local s = math.sin(math.rad(self.angle))
+		local l = math.sqrt(self.x*self.x+self.y*self.y+self.z*self.z)
+		local ux = self.x / l
+		local uy = self.y / l
+		local uz = self.z / l
+		local ux2 = ux*ux
+		local uy2 = uy*uy
+		local uz2 = uz*uz
+		rotMat[1][1] = ux2+(1.0-ux2)*c
+		rotMat[2][1] = ux*uy*(1.0-c)-uz*s
+		rotMat[3][1] = ux*uz*(1.0-c)+uy*s
+		rotMat[1][2] = ux*uy*(1.0-c)+uz*s
+		rotMat[2][2] = uy2+(1.0-uy2)*c
+		rotMat[3][2] = uy*uz*(1.0-c)-ux*s
+		rotMat[1][3] = ux*uz*(1.0-c)-uy*s
+		rotMat[2][3] = uy*uz*(1.0-c)+ux*s
+		rotMat[3][3] = uz2+(1.0-uz2)*c
+		r.matrixStack[#r.matrixStack] = matrix.mul(rotMat, r.matrixStack[#r.matrixStack])
 	end
 	function tab:Cylinder()
         local quad = glu.NewQuadric()
@@ -81,13 +140,13 @@ function GLRenderer:create(name)
 		gl.Scale(1, 1, -1)
 	end
 	function tab:CoordinateSystem()
-		local a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p = gl.Get('MODELVIEW_MATRIX')	
-		local mat = {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
-		CoordinateFrame.set(self.name, mat)
+		CoordinateFrame.set(self.name, r.matrixStack[#r.matrixStack])
 	end
 	function tab:CoordSysTransform()
 		local mat = CoordinateFrame.get(self.name)
-		gl.LoadMatrix(mat)
+		if mat then
+			gl.LoadMatrix(mat)
+		end
 	end
 
 	function r:start(options)

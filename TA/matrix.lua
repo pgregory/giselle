@@ -43,7 +43,7 @@
 
 -- for speed and clearer code load the complex function table
 -- in there we define the complex number
-local complex = require "complex"
+local complex = require "TA/complex"
 
 --////////////
 --// matrix //

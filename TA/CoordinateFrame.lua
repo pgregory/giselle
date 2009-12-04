@@ -6,7 +6,7 @@ function CoordinateFrame.set(name, matrix)
 end
 
 function CoordinateFrame.get(name)
-	return CoordinateFrame.frames[name] or {}
+	return CoordinateFrame.frames[name]
 end
 
 function CoordinateFrame.clearAll()
