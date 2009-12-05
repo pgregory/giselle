@@ -124,10 +124,58 @@ function Renderer:renderRenderables(renderables, times, filter)
 	end
 end
 
+function Renderer:pushTransform()
+	currMat = self.matrixStack[#self.matrixStack]
+	table.insert(self.matrixStack, matrix(currMat))
+end
+function Renderer:popTransform()
+	table.remove(self.matrixStack)
+end
+function Renderer:translate(x, y, z)
+	local transMat = matrix(4, "I")
+	transMat[4][1] = x
+	transMat[4][2] = y
+	transMat[4][3] = z
+	self.matrixStack[#self.matrixStack] = matrix.mul(transMat, self.matrixStack[#self.matrixStack])
+end
+function Renderer:rotate(angle, x, y, z)
+	local rotMat = matrix(4, "I")
+	local c = math.cos(math.rad(angle))
+	local s = math.sin(math.rad(angle))
+	local l = math.sqrt(x*x+y*y+z*z)
+	local ux = x / l
+	local uy = y / l
+	local uz = z / l
+	local ux2 = ux*ux
+	local uy2 = uy*uy
+	local uz2 = uz*uz
+	rotMat[1][1] = ux2+(1.0-ux2)*c
+	rotMat[2][1] = ux*uy*(1.0-c)-uz*s
+	rotMat[3][1] = ux*uz*(1.0-c)+uy*s
+	rotMat[1][2] = ux*uy*(1.0-c)+uz*s
+	rotMat[2][2] = uy2+(1.0-uy2)*c
+	rotMat[3][2] = uy*uz*(1.0-c)-ux*s
+	rotMat[1][3] = ux*uz*(1.0-c)-uy*s
+	rotMat[2][3] = uy*uz*(1.0-c)+ux*s
+	rotMat[3][3] = uz2+(1.0-uz2)*c
+	self.matrixStack[#self.matrixStack] = matrix.mul(rotMat, self.matrixStack[#self.matrixStack])
+end
+function Renderer:scale(x, y, z)
+	local scaleMat = matrix(4, "I")
+	scaleMat[1][1] = x
+	scaleMat[2][2] = y
+	scaleMat[3][3] = z
+	self.matrixStack[#self.matrixStack] = matrix.mul(scaleMat, self.matrixStack[#self.matrixStack])
+end
 
 function Renderer:create(name)
 	local r = self:clone()
 	local tab = errtable(name)
+
+	r.matrixStack = {}
+	table.insert(r.matrixStack, matrix(4, "I"))
+
+
 	function r:render(nn)
 		return tab[nn.renderop](nn)
 	end
