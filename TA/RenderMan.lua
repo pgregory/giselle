@@ -48,6 +48,15 @@ function RenderMan:create(name)
 	function tab:CoordSysTransform()
 		ri.CoordSysTransform(self.name)
 	end
+	function tab:RecordTransform(framestate)
+		framestate["transforms"][self.name] = r.matrixStack[#r.matrixStack]
+	end
+	function tab:RestoreTransform(framestate)
+		local mat = framestate["transforms"][self.name]
+		if mat then
+			--gl.LoadMatrix(mat)
+		end
+	end
 
 	function r:start(options)
 		local file = "test.rib"

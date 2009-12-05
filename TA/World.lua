@@ -14,17 +14,12 @@ function World:generate(time)
 end
 
 function World:getRenderables(atTime)
-	if type(atTime) == "table" then
-		local renderables = {}
-		for i,t in ipairs(atTime) do
-			local fn = self:generate(t)
-			table.insert(renderables, fn)
-		end
-		return renderables
-	else
-		local f1 = self:generate(atTime or self.time)
-		return {f1}
+	local renderables = {}
+	for i,t in ipairs(atTime) do
+		local fn = self:generate(t)
+		table.insert(renderables, fn)
 	end
+	return renderables
 end
 
 function World:setBody(string)

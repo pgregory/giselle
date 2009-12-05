@@ -55,25 +55,36 @@ function Renderer:renderIt(options)
 		self:frameStart(frame)
 		self:display(options)
 		local f1 = frame
+		local times = { f1 }
+		local framestates = { { transforms = {} } }
 		if options.motion_blur then
 			self:shutter(frame, frame+options.motion_blur)
-			f2 = frame+1
+			local f2 = frame+1
+			times = { f1, f2 }
+			-- TODO: These should really be objects
+			framestates[2] = { transforms = {} }
+		end
 
+		-- Pass 0 : Prep transforms
+		do
 			-- Camera
-			local renderables options.camera:getRenderables({f1, f2})
-			self:renderRenderables(renderables, {f1, f2})
+			local renderables = options.camera:getRenderables(times)
+			self:renderRenderables(renderables, times, framestates, 0, function(node) return Renderable.transformNodes[node.renderop] end)
 
 			-- World
-			renderables = options.world:getRenderables({f1, f2})
-			self:renderRenderables(renderables, {f1, f2})
-		else
+			renderables = options.world:getRenderables(times)
+			self:renderRenderables(renderables, times, framestates, 0, function(node) return Renderable.transformNodes[node.renderop] end)
+		end
+
+		-- Pass 1 : Render
+		do
 			-- Camera
-			local renderables = options.camera:getRenderables(f1)
-			self:renderRenderables(renderables, {f1})
+			local renderables = options.camera:getRenderables(times)
+			self:renderRenderables(renderables, times, framestates, 1)
 
 			-- World
-			renderables = options.world:getRenderables(f1)
-			self:renderRenderables(renderables, {f1})
+			renderables = options.world:getRenderables(times)
+			self:renderRenderables(renderables, times, framestates, 1)
 		end
 		self:frameEnd()
 	end
@@ -86,17 +97,17 @@ end
 --   						  each frame.
 --   parameter: times		  a list of times, one time for each frame.
 --]]
-function Renderer:renderRenderables(renderables, times, filter)
+function Renderer:renderRenderables(renderables, times, framestates, pass, filter)
 	for i,ro in ipairs(renderables[1]) do
 		if ro.group then
 			local subRenderables = {}
 			local f0 = ro:generate(times[1])
-                        table.insert(subRenderables, f0)
+			table.insert(subRenderables, f0)
 			for frame = 2, #renderables do
 				local fn = renderables[frame][i]:generate(times[frame])
 				table.insert(subRenderables, fn)
 			end
-			self:renderRenderables(subRenderables, times, filter)
+			self:renderRenderables(subRenderables, times, framestates, pass, filter)
 		else
 			if ( filter == nil or type(filter) ~= "function" ) or filter(ro) then
 				local same = true
@@ -110,12 +121,12 @@ function Renderer:renderRenderables(renderables, times, filter)
 					end
 				end
 				if same then
-					self:render(ro)
+					self:render(ro, framestates[1], pass)
 				else
 					ri.MotionBegin(times)
-					self:render(ro)
+					self:render(ro, framestates[1])
 					for frame = 2, #renderables do
-						self:render(renderables[frame][i])
+						self:render(renderables[frame][i], framestates[frame], pass)
 					end
 					ri.MotionEnd()
 				end
@@ -176,53 +187,59 @@ function Renderer:create(name)
 	table.insert(r.matrixStack, matrix(4, "I"))
 
 
-	function r:render(nn)
-		return tab[nn.renderop](nn)
+	function r:render(nn, framestate, pass)
+		return tab[nn.renderop](nn, framestate, pass)
 	end
-	function tab:WorldBegin()
+	function tab:WorldBegin(framestate, pass)
 		print(name.." -- WorldBegin")
 	end
-	function tab:WorldEnd()
+	function tab:WorldEnd(framestate, pass)
 		print("WorldEnd")
 	end
-	function tab:TransformBegin()
+	function tab:TransformBegin(framestate, pass)
 		print("TransformBegin")
 	end
-	function tab:TransformEnd()
+	function tab:TransformEnd(framestate, pass)
 		print("TransformEnd")
 	end
-	function tab:Translate()
+	function tab:Translate(framestate, pass)
 		print("Translate "..self.x.." "..self.y.." "..self.z)
 	end
-    function tab:Scale()
+    function tab:Scale(framestate, pass)
         print("Scale "..self.x.." "..self.y.." "..self.z)
     end
-    function tab:Rotate()
+    function tab:Rotate(framestate, pass)
 		print("Rotate "..self.angle.." "..self.x.." "..self.y.." "..self.z)
 	end
-	function tab:Cylinder()
+	function tab:Cylinder(framestate, pass)
 		print("Cylinder "..self.radius.." "..self.zmin.." "..self.zmax.." "..self.thetamax)
 	end
-	function tab:Sphere()
+	function tab:Sphere(framestate, pass)
 		print("Sphere "..self.radius.." "..self.zmin.." "..self.zmax.." "..self.thetamax)
 	end
-	function tab:Disk()
+	function tab:Disk(framestate, pass)
 		print("Disk "..self.height.." "..self.radius.." "..self.thetamax)
 	end
-	function tab:PatchMesh()
+	function tab:PatchMesh(framestate, pass)
 		print("PatchMesh "..self.type.." "..self.nu.." "..self.uwrap.." "..self.nv.." "..self.vwrap.." "..tostring(self.paramList))
 	end
-	function tab:Polygon()
+	function tab:Polygon(framestate, pass)
 		print("Polygon "..tostring(self.paramList))
 	end
-	function tab:Projection()
+	function tab:Projection(framestate, pass)
 		print("Projection "..self.type.." "..tostring(self.paramList))
 	end
-	function tab:CoordinateSystem()
+	function tab:CoordinateSystem(framestate, pass)
 		print("CoordinateSystem "..self.name)
 	end
-	function tab:CoordSysTransform()
+	function tab:CoordSysTransform(framestate, pass)
 		print("CoordSysTransform "..self.name)
+	end
+	function tab:RecordTransform(framestate, pass)
+		print("RecordTransform "..self.name)
+	end
+	function tab:RestoreTransform(framestate, pass)
+		print("RestoreTransform "..self.name)
 	end
 	return r, tab
 end

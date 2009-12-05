@@ -28,34 +28,41 @@ function GLRenderer:create(name)
 		io.stderr:write(matrix.tostring(matx).."\n")
 	end
 
-	function tab:WorldBegin()
+	function tab:WorldBegin(framestate, pass)
+		table.insert(r.matrixStack, matrix(4, "I"))
+		if pass < 1 then return end
 		gl.MatrixMode('MODELVIEW')
 		gl.LoadIdentity()
-		table.insert(r.matrixStack, matrix(4, "I"))
 	end
-	function tab:WorldEnd()
+	function tab:WorldEnd(framestate, pass)
 	end
-	function tab:TransformBegin()
-		gl.PushMatrix()
+	function tab:TransformBegin(framestate, pass)
 		Renderer.pushTransform(r)
+		if pass < 1 then return end
+		gl.PushMatrix()
 	end
-	function tab:TransformEnd()
-		gl.PopMatrix()
+	function tab:TransformEnd(framestate, pass)
 		Renderer.popTransform(r)
+		if pass < 1 then return end
+		gl.PopMatrix()
 	end
-	function tab:Translate()
-		gl.Translate(self.x, self.y, self.z)
+	function tab:Translate(framestate, pass)
 		Renderer.translate(r, self.x, self.y, self.z)
+		if pass < 1 then return end
+		gl.Translate(self.x, self.y, self.z)
 	end
-    function tab:Scale()
-        gl.Scale(self.x, self.y, self.z)
+    function tab:Scale(framestate, pass)
 		Renderer.scale(r, self.x, self.y, self.z)
+		if pass < 1 then return end
+        gl.Scale(self.x, self.y, self.z)
     end
-    function tab:Rotate()
-		gl.Rotate(self.angle, self.x, self.y, self.z)
+    function tab:Rotate(framestate, pass)
 		Renderer.rotate(r, self.angle, self.x, self.y, self.z)
+		if pass < 1 then return end
+		gl.Rotate(self.angle, self.x, self.y, self.z)
 	end
-	function tab:Cylinder()
+	function tab:Cylinder(framestate, pass)
+		if pass < 1 then return end
         local quad = glu.NewQuadric()
         if GLRenderer.mode == 'LINES' then
             glu.QuadricDrawStyle(quad, 'LINE')
@@ -67,7 +74,8 @@ function GLRenderer:create(name)
 		glu.Cylinder(quad, self.radius, self.radius, self.zmax-self.zmin, 12, 1)
 		gl.PopMatrix()
 	end
-	function tab:Sphere()
+	function tab:Sphere(framestate, pass)
+		if pass < 1 then return end
 		local quad = glu.NewQuadric()
         if GLRenderer.mode == 'LINES' then
             glu.QuadricDrawStyle(quad, 'LINE')
@@ -76,7 +84,8 @@ function GLRenderer:create(name)
         end
         glu.Sphere(quad, self.radius, 12, 6)
 	end
-	function tab:Disk()
+	function tab:Disk(framestate, pass)
+		if pass < 1 then return end
 		local quad = glu.NewQuadric()
         if GLRenderer.mode == 'LINES' then
             glu.QuadricDrawStyle(quad, 'LINE')
@@ -85,14 +94,16 @@ function GLRenderer:create(name)
         end
         glu.Disk(quad, 0, self.radius, 12, 1)
 	end
-	function tab:PatchMesh()
+	function tab:PatchMesh(framestate, pass)
+		if pass < 1 then return end
 		gl.Begin('TRIANGLES')         -- Drawing Using Triangles
 		gl.Vertex( 0, 0.3, 0)         -- Move Up One Unit From Center (Top Point)
 		gl.Vertex(-0.3,-0.3, 0)         -- Left And Down One Unit (Bottom Left)
 		gl.Vertex( 0.3,-0.3, 0)         -- Right And Down One Unit (Bottom Right)
 		gl.End()                      -- Done Drawing A Triangle
 	end
-	function tab:Polygon()
+	function tab:Polygon(framestate, pass)
+		if pass < 1 then return end
         if GLRenderer.mode == 'LINES' then
             gl.Begin('LINE_LOOP')
         else
@@ -105,16 +116,28 @@ function GLRenderer:create(name)
 		end
 		gl.End()
 	end
-	function tab:Projection()
+	function tab:Projection(framestate, pass)
+		if pass < 1 then return end
 		gl.MatrixMode('PROJECTION')
 		glu.Perspective(40, 320/240, 1, 5000)
 		gl.Scale(1, 1, -1)
 	end
-	function tab:CoordinateSystem()
+	function tab:CoordinateSystem(framestate, pass)
 		CoordinateFrame.set(self.name, r.matrixStack[#r.matrixStack])
 	end
-	function tab:CoordSysTransform()
+	function tab:CoordSysTransform(framestate, pass)
+		if pass < 1 then return end
 		local mat = CoordinateFrame.get(self.name)
+		if mat then
+			gl.LoadMatrix(mat)
+		end
+	end
+	function tab:RecordTransform(framestate, pass)
+		framestate["transforms"][self.name] = r.matrixStack[#r.matrixStack]
+	end
+	function tab:RestoreTransform(framestate, pass)
+		local mat = framestate["transforms"][self.name]
+		if pass < 1 then return end
 		if mat then
 			gl.LoadMatrix(mat)
 		end

@@ -325,6 +325,31 @@ function CoordSysTransform:isEqual(other)
 	return true
 end
 
+RecordTransform = Renderable:clone()
+RecordTransform.renderop = "RecordTransform"
+RecordTransform.name = ""
+function RecordTransform:__call(name)
+	local o = self:create()
+	o.name = name
+	return o
+end
+function RecordTransform:isEqual(other)
+	return true
+end
+
+
+RestoreTransform = Renderable:clone()
+RestoreTransform.renderop = "RestoreTransform"
+RestoreTransform.name = ""
+function RestoreTransform:__call(name)
+	local o = self:create()
+	o.name = name
+	return o
+end
+function RestoreTransform:isEqual(other)
+	return true
+end
+
 
 --[[ Render a set of frames.
 --   parameter: renderables   a list of lists of Renderables, one list for
@@ -375,6 +400,16 @@ function Renderable:popState()
 	return RenderCache:pop()
 end
 
-
+Renderable.transformNodes = {
+	TransformBegin = 1,
+	TransformEnd = 1,
+	Translate = 1,
+	Rotate = 1,
+	Scale = 1,
+	RecordTransform = 1,
+	RestoreTransform = 1,
+	WorldBegin = 1,
+	WorldEnd = 1,
+}
 
 return Renderable

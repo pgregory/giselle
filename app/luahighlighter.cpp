@@ -113,7 +113,9 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
                        << "Translate" << "Rotate" << "Scale"
                        << "Cylinder" << "Sphere" << "Disk" << "PatchMesh"
                        << "Polygon"
-                       << "Projection";
+                       << "Projection"
+                       << "CoordinateSystem" << "CoordSysTransform"
+                       << "RecordTransform" << "RestoreTransform";
 
     foreach (const QString &pattern, renderablePatterns)
     {
