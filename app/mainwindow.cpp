@@ -173,6 +173,49 @@ void MainWindow::acceptChanges()
 
 void MainWindow::doRender()
 {
+    try
+    {
+        struct C
+        {
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                // Create a new RenderMan renderer
+                lua_getglobal(L, "RenderMan");      // RenderMan
+                lua_getfield(L, -1, "create");      // RenderMan - create
+                lua_pushvalue(L, -2);   // self     // RenderMan - create - GLRenderer
+                lua_pushstring(L, "test");          // RenderMan - create - GLRenderer - name
+                lua_call(L, 2, 1);                  // RenderMan - newrenderer
+                lua_getfield(L, -1, "renderIt");    // RenderMan - newrenderer - renderIt
+                lua_pushvalue(L, -2); // self       // RenderMan - newrenderer - renderIt - newrenderer
+                lua_newtable(L);                    // RenderMan - newrenderer - renderIt - newrenderer - table
+                lua_getglobal(L, "World");          // RenderMan - newrenderer - renderIt - newrenderer - table - World
+                lua_setfield(L, -2, "world");       // RenderMan - newrenderer - renderIt - newrenderer - table
+                lua_getglobal(L, "Cameras");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
+                lua_getfield(L, -1, "main");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras - main
+                lua_setfield(L, -3, "camera");      // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
+                lua_pop(L, 1);                      // RenderMan - newrenderer - renderIt - newrenderer - table
+                lua_getglobal(L, "World");          // RenderMan - newrenderer - renderIt - newrenderer - table - World
+                lua_getfield(L, -1, "startTime");   // RenderMan - newrenderer - renderIt - newrenderer - table - World - startTime
+                lua_setfield(L, -2, "start");       // RenderMan - newrenderer - renderIt - newrenderer - table - World
+                lua_getfield(L, -2, "endTime");     // RenderMan - newrenderer - renderIt - newrenderer - table - World - endTime
+                lua_setfield(L, -2, "stop");        // RenderMan - newrenderer - renderIt - newrenderer - table - World
+                lua_pop(L, 1);                      // RenderMan - newrenderer - renderIt - newrenderer - table
+                lua_call(L, 2, 0);                  // RenderMan - newrenderer
+                lua_pop(L, 2);                      // --
+                return 0;
+            }
+        } p;
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+            throw(LuaError(L));
+
+    }
+
+    catch(std::exception & e)
+    {
+        std::cerr << e.what() <<std::endl;
+    }
 }
 
 void MainWindow::avarsChanged(const QModelIndex&, const QModelIndex&)
