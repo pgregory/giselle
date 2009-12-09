@@ -10,16 +10,22 @@ win32 {
     debug:LIBS += -L../lua/debug \
         -llua \
         -L../luagl/debug \
-        -lluagl
+        -lluagl \
+        -L../luari/debug \
+        -lluari
     release:LIBS += -L../lua/release \
         -llua \
         -L../luagl/release \
-        -lluagl
+        -lluagl \
+        -L../luari/release \
+        -lluari
 }
 !win32:LIBS += -L../lua \
     -llua \
     -L../luagl \
-    -lluagl
+    -lluagl \
+    -L../luari \
+    -lluari
 SOURCES += main.cpp \
     mainwindow.cpp \
     avarlistmodel.cpp \

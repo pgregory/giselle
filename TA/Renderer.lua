@@ -46,8 +46,8 @@ function Renderer:renderIt(options)
 		error("no camera")
 	end
 
-	local start = options.start or 0
-	local stop = options.stop or 25
+	local start = options.start or World.startTime 
+	local stop = options.stop or World.endTime 
 	local incr = options.incr or 1
 	self:start(options)
 	self:format(options)
@@ -135,12 +135,19 @@ function Renderer:renderRenderables(renderables, times, framestates, pass, filte
 	end
 end
 
+function Renderer:initTransform()
+	self.matrixStack = {}
+	table.insert(self.matrixStack, matrix(4, "I"))
+end
 function Renderer:pushTransform()
 	currMat = self.matrixStack[#self.matrixStack]
 	table.insert(self.matrixStack, matrix(currMat))
 end
 function Renderer:popTransform()
 	table.remove(self.matrixStack)
+end
+function Renderer:setTransform(mat)
+	self.matrixStack[#self.matrixStack] = mat or matrix(4, "I")
 end
 function Renderer:translate(x, y, z)
 	local transMat = matrix(4, "I")

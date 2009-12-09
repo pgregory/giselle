@@ -3,8 +3,6 @@ GLRenderer.mode = 'LINES'
 
 function GLRenderer:create(name)
 	local r, tab = Renderer:create(name)
-	r.matrixStack = {}
-	table.insert(r.matrixStack, matrix(4, "I"))
 
 	function r:printMVP()
 		local a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p = gl.Get('MODELVIEW_MATRIX')	
@@ -29,7 +27,7 @@ function GLRenderer:create(name)
 	end
 
 	function tab:WorldBegin(framestate, pass)
-		table.insert(r.matrixStack, matrix(4, "I"))
+		Renderer.initTransform(r)
 		if pass < 1 then return end
 		gl.MatrixMode('MODELVIEW')
 		gl.LoadIdentity()
@@ -137,10 +135,9 @@ function GLRenderer:create(name)
 	end
 	function tab:RestoreTransform(framestate, pass)
 		local mat = framestate["transforms"][self.name]
+		Renderer.setTransform(r, mat)
 		if pass < 1 then return end
-		if mat then
-			gl.LoadMatrix(mat)
-		end
+		gl.LoadMatrix(mat or matrix(4, "I"))
 	end
 
 	function r:start(options)
