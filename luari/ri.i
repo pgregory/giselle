@@ -6,6 +6,112 @@
 #include "ri.h"
 %}
 
+%{
+void processParameterList(lua_State* L, int input, RtInt count, RtToken* tokens, RtPointer* values)
+{
+        int i = 0;
+        int arrayI = 0;
+        int arrayLen;
+        const char* token;
+        int valType;
+        float* floatValArray;
+        char** stringValArray;
+        const char* stringVal;
+        lua_pushnil(L);  /* first key */
+        while (lua_next(L, input) != 0)
+        {
+                /* uses 'key' (at index -2) and 'value' (at index -1) */
+                token = lua_tostring(L, -2);
+                tokens[i] = SWIG_ALLOC_ARRAY(char,strlen(token)+1);
+                strcpy(tokens[i], token);
+
+                /* Now work out the type and process it as appropriate. */
+                valType = lua_type(L, -1);
+                switch(valType)
+                {
+                        case LUA_TNUMBER:
+                        {
+                                floatValArray = SWIG_ALLOC_ARRAY(float, 1);
+                                floatValArray[0] = (float)lua_tonumber(L, -1);
+                                values[i] = (RtPointer)floatValArray;
+                        }
+                        break;
+
+                        case LUA_TSTRING:
+                        {
+                                stringValArray = SWIG_ALLOC_ARRAY(char*, 1);
+                                stringVal = lua_tostring(L, -1);
+                                stringValArray[0] = SWIG_ALLOC_ARRAY(char, strlen(stringVal));
+                                strcpy(stringValArray[0], stringVal);
+                                values[i] = (RtPointer)stringValArray;
+                        }
+                        break;
+
+                        case LUA_TTABLE:
+                        {
+                                arrayLen = SWIG_itable_size(L, -1);
+                                if(arrayLen == 0)
+                                {
+                                        lua_pushstring(L,"table appears to be empty");
+                                        break;
+                                }
+                                lua_rawgeti(L, -1, 1);
+                                valType = lua_type(L, -1);
+                                lua_pop(L, 1);
+                                switch(valType)
+                                {
+                                        case LUA_TNUMBER:
+                                        {
+                                                floatValArray = SWIG_ALLOC_ARRAY(float, arrayLen);
+                                                for (arrayI = 0; arrayI < arrayLen; arrayI++)
+                                                {
+                                                        lua_rawgeti(L,-1,arrayI+1);
+                                                        if (lua_isnumber(L,-1))
+                                                                floatValArray[arrayI] = (float)lua_tonumber(L,-1);
+                                                        else
+                                                                lua_pop(L,1);
+                                                        lua_pop(L,1);
+                                                }
+                                                values[i] = (RtPointer)floatValArray;
+                                        }
+                                        break;
+
+                                        case LUA_TSTRING:
+                                        {
+                                                stringValArray = SWIG_ALLOC_ARRAY(char*, arrayLen);
+                                                for (arrayI = 0; arrayI < arrayLen; arrayI++)
+                                                {
+                                                        lua_rawgeti(L,-1,arrayI+1);
+                                                        if (lua_isstring(L,-1))
+                                                        {
+                                                                stringVal = lua_tostring(L, -1);
+                                                                stringValArray[arrayI] = SWIG_ALLOC_ARRAY(char, strlen(stringVal));
+                                                                strcpy(stringValArray[arrayI], stringVal);
+                                                        }
+                                                        else
+                                                                lua_pop(L,1);
+                                                        lua_pop(L,1);
+                                                }
+                                                values[i] = (RtPointer)stringValArray;
+                                        }
+                                        break;
+
+                                        default:
+                                                break;
+                                }
+                        }
+                        break;
+
+                        default:
+                                values[i] = 0;
+                }
+                /* removes 'value'; keeps 'key' for next iteration */
+                lua_pop(L, 1);
+                ++i;
+        }
+}
+%}
+
 %typemap(in) (RtInt count, RtToken tokens[], RtPointer values[])
 %{	
 	$1 = 0;
@@ -25,108 +131,7 @@
 
 	$2=SWIG_ALLOC_ARRAY(RtToken,$1);
 	$3=SWIG_ALLOC_ARRAY(RtPointer,$1);
-	{
-	int i = 0;
-	int arrayI = 0;
-	int arrayLen;
-	const char* token;
-	int valType;
-	float* floatValArray;
-	char** stringValArray;
-	const char* stringVal;
-	lua_pushnil(L);  /* first key */
-	while (lua_next(L, $input) != 0) 
-	{
-		/* uses 'key' (at index -2) and 'value' (at index -1) */
-		token = lua_tostring(L, -2);
-		$2[i] = SWIG_ALLOC_ARRAY(char,strlen(token)+1);
-		strcpy($2[i], token);
-		
-		/* Now work out the type and process it as appropriate. */
-		valType = lua_type(L, -1);
-		switch(valType)
-		{
-			case LUA_TNUMBER:
-			{
-				floatValArray = SWIG_ALLOC_ARRAY(float, 1);
-				floatValArray[0] = (float)lua_tonumber(L, -1);
-				$3[i] = (RtPointer)floatValArray;
-			}
-			break;
-			
-			case LUA_TSTRING:
-			{
-				stringValArray = SWIG_ALLOC_ARRAY(char*, 1);
-				stringVal = lua_tostring(L, -1);
-				stringValArray[0] = SWIG_ALLOC_ARRAY(char, strlen(stringVal));
-				strcpy(stringValArray[0], stringVal);
-				$3[i] = (RtPointer)stringValArray;
-			}
-			break;
-			
-			case LUA_TTABLE:
-			{
-				arrayLen = SWIG_itable_size(L, -1);
-				if(arrayLen == 0)
-				{
-					lua_pushstring(L,"table appears to be empty");
-					break;
-				}
-				lua_rawgeti(L, -1, 1);
-				valType = lua_type(L, -1);
-				lua_pop(L, 1);
-				switch(valType)
-				{
-					case LUA_TNUMBER:
-					{
-						floatValArray = SWIG_ALLOC_ARRAY(float, arrayLen);
-						for (arrayI = 0; arrayI < arrayLen; arrayI++) 
-						{
-							lua_rawgeti(L,-1,arrayI+1);
-							if (lua_isnumber(L,-1))
-								floatValArray[arrayI] = (float)lua_tonumber(L,-1);
-							else 
-								lua_pop(L,1);
-							lua_pop(L,1);
-						}
-						$3[i] = (RtPointer)floatValArray;
-					}
-					break;
-					
-					case LUA_TSTRING:
-					{
-						stringValArray = SWIG_ALLOC_ARRAY(char*, arrayLen);
-						for (arrayI = 0; arrayI < arrayLen; arrayI++) 
-						{
-							lua_rawgeti(L,-1,arrayI+1);
-							if (lua_isstring(L,-1))
-							{
-								stringVal = lua_tostring(L, -1);
-								stringValArray[arrayI] = SWIG_ALLOC_ARRAY(char, strlen(stringVal));
-								strcpy(stringValArray[arrayI], stringVal);
-							}
-							else 
-								lua_pop(L,1);
-							lua_pop(L,1);
-						}
-						$3[i] = (RtPointer)stringValArray;
-					}
-					break;
-					
-					default:
-						break;
-				}
-			}
-			break;
-			
-			default:
-				$3[i] = 0;
-		}
-		/* removes 'value'; keeps 'key' for next iteration */
-		lua_pop(L, 1);
-		++i;
-	}
-	}
+        processParameterList(L, $input, $1, $2, $3);
 %}
 %typemap(default) (RtInt count, RtToken tokens[], RtPointer values[])
 %{	
@@ -134,6 +139,50 @@
 	$2 = NULL;
 	$3 = NULL;
 %}
+%typemap(in) RtMatrix
+%{
+    {
+        int r = 0, c = 0;
+        if (!lua_istable(L,$input))
+        {
+                lua_pushstring(L,"expected a table");
+                return 0;
+        }
+        int size = SWIG_table_size(L,$input);
+        if (size != 4)
+        {
+                lua_pushstring(L,"expected 4 entries");
+                return 0;
+        }
+
+        $1 = SWIG_ALLOC_ARRAY(float[4], 4);
+        lua_pushnil(L);
+        while(lua_next(L, $input) != 0)
+        {
+            const char* type = lua_typename(L, lua_type(L, -1));
+            if(!lua_istable(L, -1))
+            {
+                lua_pushstring(L, "ill formed matrix table");
+                return 0;
+            }
+            lua_pushnil(L);
+            while(lua_next(L, -2))
+            {
+                $1[r][c] = lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                r += 1;
+            }
+            lua_pop(L, 1);
+            c += 1;
+            r = 0;
+        }
+    }
+%}
+%typemap (freearg) RtMatrix
+%{
+    SWIG_FREE_ARRAY($1);
+%}
+
 
 %include "ritypes.h"
 
