@@ -61,6 +61,27 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
     }
     lua_pop(L, 1);                              // --
 
+    QList<QVariant> lightNodeData;
+    lightNodeData << "Lights";
+    SceneTreeItem* lightsItem = new SceneTreeItem(L, lightNodeData, LIGHTS, LUA_NOREF, rootItem);
+    rootItem->appendChild(lightsItem);
+
+    // Now fill in the cameras from the Lua state.
+    lua_getglobal(L, "Lightsources");                    // Lightsources
+    lua_pushnil(L); /* the first key */                  // Lightsources - nil
+    while(lua_next(L, -2) != 0)                          // Lightsources - key - value
+    {
+        /* 'key' at -2, 'value' at -1 */
+        lua_getfield(L, -1, "name");                     // Lightsources - key - value - name
+        const char* name = lua_tostring(L, -1);
+        lua_pop(L, 1);                                   // Lightsources - key - value
+        int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Lightsources - key
+        QList<QVariant> lightData;
+        lightData << name;
+        lightsItem->appendChild(new SceneTreeItem(L, lightData, LIGHT, nodeRef, lightsItem));
+    }
+    lua_pop(L, 1);                              // --
+
     // Add a world node.
     QList<QVariant> worldData;
     worldData << "World";

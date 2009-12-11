@@ -14,8 +14,10 @@ enum _TreeItemType
     ROOT,
     MODELS,
     CAMERAS,
+    LIGHTS,
     MODEL,
     CAMERA,
+    LIGHT,
     WORLD,
 };
 
