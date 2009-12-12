@@ -137,10 +137,10 @@ end
 
 Cylinder = Renderable:clone()
 Cylinder.renderop = "Cylinder"
-Cylinder.radius = 0
-Cylinder.zmin = 0
-Cylinder.zmax = 0
-Cylinder.thetamax = 0
+Cylinder.radius = 1.0
+Cylinder.zmin = -1.0
+Cylinder.zmax = 1.0
+Cylinder.thetamax = 360.0
 function Cylinder:__call(radius, zmin, zmax, thetamax)
 	local o = self:create()
 	o.radius = radius

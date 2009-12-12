@@ -161,6 +161,7 @@ void MainWindow::acceptChanges()
                 throw(LuaError(L));
             }
             ui->graphicsView->updateGL();
+            populateTree();
         }
         catch(std::exception& e)
         {
@@ -310,6 +311,7 @@ void MainWindow::runCommand()
         msgBox.exec();
         return;
     }
+    ui->graphicsView->updateGL();
     populateTree();
     selectModel(ui->sceneTreeView->currentIndex());
     ui->lineEdit->clear();

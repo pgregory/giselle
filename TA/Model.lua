@@ -2,8 +2,6 @@ Model = Renderable:clone()
 Model.group = true 
 
 
-Models = {}
-
 function Model:generate(time)
     Renderable:pushState()
     if(self.body) then
@@ -13,7 +11,7 @@ function Model:generate(time)
 end 
 
 function Model:avar(name, keyframes)
-    local o = Avar:create(name, keyframes or {})
+    local o = self.avars[name] or Avar:create(name, keyframes or {})
     self.avars[name] = o
     return o
 end
@@ -24,11 +22,31 @@ function Model:setBody(string)
     self.bodySource = string
 end
 
+function Model:model(name)
+    if type(name) ~= "string" then
+        error("Must specify a name for a model")
+        return
+    end
+	if self.children[name] then
+		return self.children[name]
+	end
+    local o = Model:clone()
+    o.name = name
+    o.avars = {}
+    o.body = nil
+	o.children = {}
+    function o:__call()
+        self:create()
+    end
+    self.children[name] = o
+    return o
+end
+
 --[[
 Static utility functions
 ]]--
 
-function Model.new(name)
+function Model.new(name, parent)
     if type(name) ~= "string" then
         error("Must specify a name for a model")
         return
@@ -44,21 +62,9 @@ function Model.new(name)
     function o:__call()
         self:create()
     end
-    Models[name] = o
+    parent.children[name] = o
     return o
 end
-
-Models_meta = {}
-function Models_meta:__index(key)
-    model = rawget(Models, key)
-    if model and type(model) == "table" then
-        return model
-    else
-        error("Model \""..tostring(key).."\" does not exist")
-    end
-end
-
-setmetatable(Models, Models_meta)
 
 return Model
 
