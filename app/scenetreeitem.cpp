@@ -26,6 +26,20 @@ void SceneTreeItem::appendChild(SceneTreeItem *item)
     childItems.append(item);
 }
 
+bool SceneTreeItem::contains(QList<QVariant>& data, int& row)
+{
+    QListIterator<SceneTreeItem*> i(childItems);
+    row = 0;
+    while(i.hasNext())
+    {
+        if(*(i.next()) == data)
+            return true;
+        ++row;
+    }
+    return false;
+}
+
+
 SceneTreeItem *SceneTreeItem::child(int row)
 {
     return childItems.value(row);

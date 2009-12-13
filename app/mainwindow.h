@@ -22,6 +22,7 @@ namespace Ui
 }
 
 class AvarListModel;
+class SceneTreeModel;
 
 class MainWindow : public QMainWindow
 {
@@ -60,6 +61,7 @@ private:
     QString currentName;
     int     m_currentObjectRef;
     AvarListModel* m_currentAvarModel;
+    SceneTreeModel* m_sceneModel;
 };
 
 #endif // MAINWINDOW_H

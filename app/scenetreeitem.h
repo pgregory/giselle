@@ -30,6 +30,7 @@ public:
     ~SceneTreeItem();
 
     void appendChild(SceneTreeItem *child);
+    bool contains(QList<QVariant>& data, int& row);
 
     SceneTreeItem *child(int row);
     int childCount() const;
@@ -41,6 +42,11 @@ public:
     int nodeRef() const
     {
         return m_nodeRef;
+    }
+
+    bool operator==(const QList<QVariant>& other)
+    {
+        return itemData == other;
     }
 
 private:

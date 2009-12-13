@@ -14,6 +14,9 @@ public:
     SceneTreeModel(lua_State* L, QObject *parent = 0);
     virtual ~SceneTreeModel();
 
+    void processSceneTree(lua_State* L, SceneTreeItem* parent, const QModelIndex& index);
+    void populateData(lua_State* L);
+
     QVariant data(const QModelIndex& index, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
@@ -23,7 +26,10 @@ public:
     int columnCount(const QModelIndex& parent = QModelIndex()) const;
 
 private:
-    SceneTreeItem *rootItem;
+    SceneTreeItem* m_rootItem;
+    SceneTreeItem* m_camerasItem;
+    SceneTreeItem* m_lightsItem;
+    SceneTreeItem* m_worldItem;
 };
 
 #endif // SCENETREEMODEL_H

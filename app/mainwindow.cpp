@@ -25,7 +25,7 @@ extern "C" {
 
 
 MainWindow::MainWindow(lua_State *L, QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL), m_currentAvarModel(0)
+    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL), m_currentAvarModel(0), m_sceneModel(0)
 {
     QCoreApplication::setApplicationName("TheAnimator");
     QCoreApplication::setOrganizationName("Aqsis Team");
@@ -180,7 +180,7 @@ void MainWindow::doRender()
         {
             static int call(lua_State* L)
             {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                //C* p = static_cast<C*>(lua_touserdata(L, 1));
                 // Create a new RenderMan renderer
                 lua_getglobal(L, "RenderMan");      // RenderMan
                 lua_getfield(L, -1, "create");      // RenderMan - create
@@ -319,14 +319,18 @@ void MainWindow::runCommand()
 
 void MainWindow::populateTree()
 {
-    SceneTreeModel* sceneModel = new SceneTreeModel(L);
-    QItemSelectionModel* old = ui->sceneTreeView->selectionModel();
-    ui->sceneTreeView->setModel(sceneModel);
-    delete old;
+    if(!m_sceneModel)
+    {
+        m_sceneModel = new SceneTreeModel(L);
+        ui->sceneTreeView->setModel(m_sceneModel);
 
-    // Set the Models and Cameras nodes as expanded.
-    ui->sceneTreeView->setExpanded(sceneModel->index(0,0,QModelIndex()), true);
-    ui->sceneTreeView->setExpanded(sceneModel->index(1,0,QModelIndex()), true);
+        QObject::connect(m_sceneModel, SIGNAL(rowsInserted(QModelIndex, int, int)), ui->sceneTreeView, SLOT(expand(QModelIndex)));
+    }
+
+    m_sceneModel->populateData(L);
+
+    // Set the World node as expanded.
+    ui->sceneTreeView->setExpanded(m_sceneModel->index(2,0,QModelIndex()), true);
 }
 
 void MainWindow::save()
@@ -387,7 +391,7 @@ void MainWindow::load()
 
                 return 0;
             }
-        } p = { name };
+        } p = { name, 0, 0 };
         int res = lua_cpcall(L, C::call, &p);
         if(res != 0)
         {
