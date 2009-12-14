@@ -51,6 +51,7 @@ void OpenGLWidget::paintGL()
         {
             int rendererref;
             int time;
+            QString cameraName;
             static int call(lua_State* L)
             {
                 C* p = static_cast<C*>(lua_touserdata(L, 1));
@@ -60,10 +61,13 @@ void OpenGLWidget::paintGL()
                 lua_newtable(L);
                 lua_getglobal(L, "World");
                 lua_setfield(L, -2, "world");
-                lua_getglobal(L, "Cameras");
-                lua_getfield(L, -1, "main");
-                lua_setfield(L, -3, "camera");
-                lua_pop(L, 1);  // << Cameras
+                if(!p->cameraName.isEmpty())
+                {
+                    lua_getglobal(L, "Cameras");
+                    lua_getfield(L, -1, p->cameraName.toAscii());
+                    lua_setfield(L, -3, "camera");
+                    lua_pop(L, 1);  // << Cameras
+                }
                 lua_pushinteger(L, p->time);
                 lua_setfield(L, -2, "start");
                 lua_pushinteger(L, p->time);
@@ -72,21 +76,31 @@ void OpenGLWidget::paintGL()
                 lua_pop(L, 1);  /* << renderer" */
                 return 0;
             }
-        } p = { m_glRendererRef, m_time };
+        } p = { m_glRendererRef, m_time, m_cameraName };
         int res = lua_cpcall(m_L, C::call, &p);
         if(res != 0)
             throw(LuaError(m_L));
-
     }
-
     catch(std::exception & e)
     {
-        std::cerr << e.what() <<std::endl;
+        std::cerr << e.what() << std::endl;
+        // \todo: Want to output the message to the interface here, but if
+        // I do, the render loop forces us into an infinite loop, so for now it
+        // just goes to stderr.
+        //QMessageBox msgBox;
+        //msgBox.setText(e.what());
+        //msgBox.exec();
     }
 }
 
 void OpenGLWidget::timeChanged(int time)
 {
     m_time = time;
+    updateGL();
+}
+
+void OpenGLWidget::cameraChanged(QString cameraName)
+{
+    m_cameraName = cameraName;
     updateGL();
 }

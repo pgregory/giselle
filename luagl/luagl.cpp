@@ -836,7 +836,7 @@ static int luagl_bitmap_raw(lua_State *L)
     LUAGL_SHOWERROR("incorrect argument to function 'gl.BitmapRaw'");
 
   glBitmap((GLsizei)lua_tonumber(L, 1), (GLsizei)lua_tonumber(L, 2), (GLfloat)lua_tonumber(L, 3), (GLfloat)lua_tonumber(L, 4),
-          (GLfloat)lua_tonumber(L, 5), (GLfloat)lua_tonumber(L, 6), lua_touserdata(L, 7));
+          (GLfloat)lua_tonumber(L, 5), (GLfloat)lua_tonumber(L, 6), (GLubyte*)lua_touserdata(L, 7));
   return 0;
 }
 
@@ -2408,7 +2408,7 @@ static int luagl_get_pointer(lua_State *L)
   if(e == GL_EDGE_FLAG_ARRAY_POINTER)
   {
     /* call opengl function */
-    glGetPointerv(e, (void *)&flags);
+    glGetPointerv(e, (GLvoid **)&flags);
 
     if(flags == 0)
       return 0;
@@ -2421,7 +2421,7 @@ static int luagl_get_pointer(lua_State *L)
   else
   {
     /* call opengl function */
-    glGetPointerv(e, (void *)&params);
+    glGetPointerv(e, (GLvoid **)&params);
 
     if(params == 0)
       return 0;

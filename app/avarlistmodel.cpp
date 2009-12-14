@@ -107,7 +107,9 @@ bool AvarListModel::setData(const QModelIndex &index, const QVariant &value, int
 
     AvarListItem& av = avarList[index.row()];
     av.setKeyframe(index.column() + _startFrame, value.toDouble());
-    emit dataChanged(index, index);
+    // \todo: Should be able to pass 'index' here, but for some reason it
+    // doesn't update properly if I do, so until I find out why, force a complete refresh.
+    emit dataChanged(QModelIndex(), QModelIndex());
     return true;
 }
 

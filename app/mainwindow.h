@@ -51,6 +51,7 @@ protected:
 
 private:
     void populateTree();
+    void populateAvarView();
 
     Ui::MainWindow *ui;
     QSplitter* splitter;

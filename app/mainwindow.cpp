@@ -14,12 +14,12 @@
 #include <QSettings>
 #include <QCloseEvent>
 
-extern "C" {
+//extern "C" {
 #include "lua.h"
 
 #include "lauxlib.h"
 #include "lualib.h"
-}
+//}
 
 #include "luaerror.h"
 
@@ -58,6 +58,8 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), ui->avarTableView, SLOT(timeChanged(int)));
     QObject::connect(ui->lockCheck, SIGNAL(stateChanged(int)), ui->avarTableView, SLOT(lock(int)));
 
+    QObject::connect(ui->cameraCombo, SIGNAL(currentIndexChanged(QString)), ui->graphicsView, SLOT(cameraChanged(QString)));
+
     mainEditor = new QTextEdit;
     mainEditor = ui->mainEditor;
     highlighter = new LuaHighlighter(mainEditor->document());
@@ -82,7 +84,6 @@ void MainWindow::selectModel(const QModelIndex &index)
     struct C
     {
         QString source;
-        QList<int> avars;
         int     objref;
         static int call(lua_State *L)
         {
@@ -97,20 +98,9 @@ void MainWindow::selectModel(const QModelIndex &index)
             const char* source = lua_tostring(L, -1);
             p->source = source;
             lua_pop(L, 1);  /* << bodySource */
-            lua_getfield(L, -1, "avars");
-            if(!lua_isnil(L, -1))
-            {
-                lua_pushnil(L); /* the first key */
-                while(lua_next(L, -2) != 0)
-                {
-                    /* 'key' at -2, 'value' at -1 */
-                    p->avars << luaL_ref(L, LUA_REGISTRYINDEX); /* << value */
-                }
-            }
-            lua_pop(L, 1);  /* << avars  */
             return 0;
         }
-    } p = { "", QList<int>(), nodeRef };
+    } p = { "", nodeRef };
     int res = lua_cpcall(L, C::call, &p);
     if(res != 0)
         mainEditor->clear();
@@ -122,15 +112,7 @@ void MainWindow::selectModel(const QModelIndex &index)
         lua_rawgeti(L, LUA_REGISTRYINDEX, nodeRef);
         m_currentObjectRef = luaL_ref(L, LUA_REGISTRYINDEX);
     }
-
-    AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
-    ui->avarTableView->setModel(model);
-    QObject::connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
-    QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
-    QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), model, SLOT(endFrameChanged(int)));
-    QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), model, SLOT(timeChanged(int)));
-    delete(m_currentAvarModel);
-    m_currentAvarModel = model;
+    populateAvarView();
 }
 
 void MainWindow::acceptChanges()
@@ -162,6 +144,7 @@ void MainWindow::acceptChanges()
             }
             ui->graphicsView->updateGL();
             populateTree();
+            populateAvarView();
         }
         catch(std::exception& e)
         {
@@ -210,7 +193,6 @@ void MainWindow::doRender()
             throw(LuaError(L));
 
     }
-
     catch(std::exception & e)
     {
         std::cerr << e.what() <<std::endl;
@@ -317,6 +299,61 @@ void MainWindow::runCommand()
     ui->lineEdit->clear();
 }
 
+void MainWindow::populateAvarView()
+{
+    QMap<QString, QList<QPair<float, float> > > avarsList;
+
+    try
+    {
+        struct C
+        {
+            QList<int> avars;
+            int     objref;
+            static int call(lua_State *L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
+                if(lua_isnil(L, -1))
+                {
+                    lua_pushstring(L, "Error, item is nil!");
+                    lua_error(L);
+                }
+                lua_getfield(L, -1, "avars");
+                if(!lua_isnil(L, -1))
+                {
+                    lua_pushnil(L); /* the first key */
+                    while(lua_next(L, -2) != 0)
+                    {
+                        /* 'key' at -2, 'value' at -1 */
+                        p->avars << luaL_ref(L, LUA_REGISTRYINDEX); /* << value */
+                    }
+                }
+                lua_pop(L, 1);  /* << avars  */
+                return 0;
+            }
+        } p = { QList<int>(), m_currentObjectRef };
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+            throw(LuaError(L));
+
+        AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
+        ui->avarTableView->setModel(model);
+        QObject::connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
+        QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
+        QObject::connect(ui->timeMax, SIGNAL(valueChanged(int)), model, SLOT(endFrameChanged(int)));
+        QObject::connect(ui->timeSlider, SIGNAL(valueChanged(int)), model, SLOT(timeChanged(int)));
+        delete(m_currentAvarModel);
+        m_currentAvarModel = model;
+    }
+    catch(std::exception& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
+
+}
+
 void MainWindow::populateTree()
 {
     if(!m_sceneModel)
@@ -328,6 +365,45 @@ void MainWindow::populateTree()
     }
 
     m_sceneModel->populateData(L);
+
+    ui->cameraCombo->clear();
+
+    try
+    {
+        struct C
+        {
+            QComboBox* combo;
+            static int call(lua_State* L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, -1));
+                // Now fill in the cameras from the Lua state.
+                lua_getglobal(L, "Cameras");                         // Cameras
+                lua_pushnil(L); /* the first key */                  // Cameras - nil
+                while(lua_next(L, -2) != 0)                          // Cameras - key - value
+                {
+                    /* 'key' at -2, 'value' at -1 */
+                    lua_getfield(L, -1, "name");                     // Cameras - key - value - name
+                    const char* name = lua_tostring(L, -1);
+                    lua_pop(L, 1);                                   // Cameras - key - value
+                    QList<QVariant> cameraData;
+                    cameraData << name;
+                    int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Cameras - key
+                    p->combo->addItem(name, nodeRef);
+                }
+                lua_pop(L, 1);                              // --
+                return 0;
+            }
+        } p = { ui->cameraCombo };
+        int res = lua_cpcall(L, C::call, &p);
+        if(res != 0)
+            throw(LuaError(L));
+    }
+    catch(std::exception& e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(e.what());
+        msgBox.exec();
+    }
 
     // Set the World node as expanded.
     ui->sceneTreeView->setExpanded(m_sceneModel->index(2,0,QModelIndex()), true);
@@ -417,7 +493,7 @@ void MainWindow::writeSettings()
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
     settings.setValue("pos", pos());
-    settings.setValue("state", saveState());
+    settings.setValue("state", saveState(2));
     settings.endGroup();
 }
 
@@ -428,7 +504,7 @@ void MainWindow::readSettings()
     settings.beginGroup("MainWindow");
     resize(settings.value("size", QSize(815, 600)).toSize());
     move(settings.value("pos", QPoint(200, 200)).toPoint());
-    restoreState(settings.value("state", QByteArray()).toByteArray());
+    restoreState(settings.value("state", QByteArray()).toByteArray(), 2);
     settings.endGroup();
 }
 

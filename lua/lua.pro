@@ -8,35 +8,35 @@ TEMPLATE = lib
 CONFIG += create_prl
 VERSION = 5.1.4
 DEFINES += LUA_LIBRARY
-SOURCES += lzio.c \
-    lvm.c \
-    lundump.c \
-    ltm.c \
-    ltable.c \
-    lstring.c \
-    lstate.c \
-    lparser.c \
-    lopcodes.c \
-    lobject.c \
-    lmem.c \
-    llex.c \
-    lgc.c \
-    lfunc.c \
-    ldump.c \
-    ldo.c \
-    ldebug.c \
-    lcode.c \
-    lapi.c \
-    ltablib.c \
-    lstrlib.c \
-    loslib.c \
-    loadlib.c \
-    lmathlib.c \
-    liolib.c \
-    linit.c \
-    ldblib.c \
-    lbaselib.c \
-    lauxlib.c
+SOURCES += lzio.cpp \
+    lvm.cpp \
+    lundump.cpp \
+    ltm.cpp \
+    ltable.cpp \
+    lstring.cpp \
+    lstate.cpp \
+    lparser.cpp \
+    lopcodes.cpp \
+    lobject.cpp \
+    lmem.cpp \
+    llex.cpp \
+    lgc.cpp \
+    lfunc.cpp \
+    ldump.cpp \
+    ldo.cpp \
+    ldebug.cpp \
+    lcode.cpp \
+    lapi.cpp \
+    ltablib.cpp \
+    lstrlib.cpp \
+    loslib.cpp \
+    loadlib.cpp \
+    lmathlib.cpp \
+    liolib.cpp \
+    linit.cpp \
+    ldblib.cpp \
+    lbaselib.cpp \
+    lauxlib.cpp
 HEADERS += lzio.h \
     lvm.h \
     lundump.h \

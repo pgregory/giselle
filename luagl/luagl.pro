@@ -20,9 +20,9 @@ win32 {
 }
 !win32:LIBS += -L../lua \
     -llua
-SOURCES += luagl.c \
-           luaglu.c \
-           luagl_util.c
+SOURCES += luagl.cpp \
+           luaglu.cpp \
+           luagl_util.cpp
 
 HEADERS += luagl.h\
            luaglu.h \

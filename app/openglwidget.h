@@ -29,6 +29,7 @@ public:
 
 public slots:
     void timeChanged(int time);
+    void cameraChanged(QString cameraName);
 
 protected:
     void initializeGL()
@@ -59,6 +60,7 @@ private:
     lua_State* m_L;
     int        m_time;
     int        m_glRendererRef;
+    QString    m_cameraName;
 };
 
 #endif // OPENGLWIDGET_H

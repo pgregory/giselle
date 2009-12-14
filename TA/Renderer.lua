@@ -42,8 +42,6 @@ end
 function Renderer:renderIt(options)
 	if type(options.world) ~= "table" then
 		error("no world")
-	elseif type(options.camera) ~= "table" then
-		error("no camera")
 	end
 
 	local start = options.start or World.startTime 
@@ -68,8 +66,10 @@ function Renderer:renderIt(options)
 		-- Pass 0 : Prep transforms
 		do
 			-- Camera
-			local renderables = options.camera:getRenderables(times)
-			self:renderRenderables(renderables, times, framestates, 0, function(node) return Renderable.transformNodes[node.renderop] end)
+                        if options.camera then
+                            local renderables = options.camera:getRenderables(times)
+                            self:renderRenderables(renderables, times, framestates, 0, function(node) return Renderable.transformNodes[node.renderop] end)
+                        end
 
 			-- World
 			renderables = options.world:getRenderables(times)
@@ -79,8 +79,10 @@ function Renderer:renderIt(options)
 		-- Pass 1 : Render
 		do
 			-- Camera
-			local renderables = options.camera:getRenderables(times)
-			self:renderRenderables(renderables, times, framestates, 1)
+                        if options.camera then
+                            local renderables = options.camera:getRenderables(times)
+                            self:renderRenderables(renderables, times, framestates, 1)
+                        end
 
 			-- World
 			renderables = options.world:getRenderables(times)

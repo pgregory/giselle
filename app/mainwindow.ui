@@ -149,10 +149,13 @@
         <bool>false</bool>
        </attribute>
        <attribute name="verticalHeaderVisible">
-        <bool>false</bool>
+        <bool>true</bool>
        </attribute>
        <attribute name="verticalHeaderDefaultSectionSize">
         <number>18</number>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>true</bool>
        </attribute>
       </widget>
      </item>
@@ -179,7 +182,7 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
       <widget class="OpenGLWidget" name="graphicsView">
        <property name="sizePolicy">
@@ -201,6 +204,9 @@
         </size>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cameraCombo"/>
      </item>
     </layout>
    </widget>
