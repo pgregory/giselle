@@ -51,16 +51,13 @@ protected:
 
 private:
     void populateTree();
-    void populateAvarView();
+    void populateAvarView(int nodeRef);
 
     Ui::MainWindow *ui;
     QSplitter* splitter;
-    QTextEdit* mainEditor;
-    LuaHighlighter* highlighter;
     lua_State* L;
     QString currentType;
     QString currentName;
-    int     m_currentObjectRef;
     AvarListModel* m_currentAvarModel;
     SceneTreeModel* m_sceneModel;
 };

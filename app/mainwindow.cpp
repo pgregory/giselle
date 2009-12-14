@@ -6,6 +6,7 @@
 #include "avartableview.h"
 #include "scenetreemodel.h"
 #include "scenetreeitem.h"
+#include "luaeditor.h"
 
 #include <QCoreApplication>
 #include <QMap>
@@ -25,7 +26,7 @@
 
 
 MainWindow::MainWindow(lua_State *L, QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentObjectRef(LUA_REFNIL), m_currentAvarModel(0), m_sceneModel(0)
+    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentAvarModel(0), m_sceneModel(0)
 {
     QCoreApplication::setApplicationName("TheAnimator");
     QCoreApplication::setOrganizationName("Aqsis Team");
@@ -60,9 +61,7 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
 
     QObject::connect(ui->cameraCombo, SIGNAL(currentIndexChanged(QString)), ui->graphicsView, SLOT(cameraChanged(QString)));
 
-    mainEditor = new QTextEdit;
-    mainEditor = ui->mainEditor;
-    highlighter = new LuaHighlighter(mainEditor->document());
+    ui->editorTabWidget->clear();
 
     readSettings();
 }
@@ -79,11 +78,51 @@ void MainWindow::selectModel(const QModelIndex &index)
 
     SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
     int nodeRef = item->nodeRef();
+
+    // Check if the model is already opened.
+    for(int i = 0; i < ui->editorTabWidget->count(); ++i)
+    {
+        try
+        {
+            struct C
+            {
+                int indexa, indexb;
+                bool equal;
+                static int call(lua_State* L)
+                {
+                    C* p = static_cast<C*>(lua_touserdata(L, -1));
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexa);
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexb);
+                    p->equal = lua_rawequal(L, -1, -2) != 0;
+                    lua_pop(L, 2);
+                    return 0;
+                }
+            } p = { nodeRef, static_cast<LuaEditor*>(ui->editorTabWidget->widget(i))->nodeRef(), false };
+            int res = lua_cpcall(L, C::call, &p);
+            if(res != 0)
+                throw(LuaError(L));
+
+            if(p.equal)
+            {
+                ui->editorTabWidget->setCurrentIndex(i);
+                return;
+            }
+        }
+        catch(std::exception& e)
+        {
+            QMessageBox box;
+            box.setText(e.what());
+            box.exec();
+            return;
+        }
+    }
+
     QMap<QString, QList<QPair<float, float> > > avarsList;
 
     struct C
     {
         QString source;
+        QString nodeName;
         int     objref;
         static int call(lua_State *L)
         {
@@ -98,26 +137,29 @@ void MainWindow::selectModel(const QModelIndex &index)
             const char* source = lua_tostring(L, -1);
             p->source = source;
             lua_pop(L, 1);  /* << bodySource */
+            lua_getfield(L, -1, "name");
+            const char* name = lua_tostring(L, -1);
+            p->nodeName = name;
+            lua_pop(L, 1);  /* << name */
             return 0;
         }
-    } p = { "", nodeRef };
+    } p = { "", "", nodeRef };
     int res = lua_cpcall(L, C::call, &p);
-    if(res != 0)
-        mainEditor->clear();
-    else
+    if(res == 0)
     {
-        mainEditor->setText(p.source);
-        luaL_unref(L, LUA_REGISTRYINDEX, m_currentObjectRef);
-        // Duplicate the reference for our ownership.
-        lua_rawgeti(L, LUA_REGISTRYINDEX, nodeRef);
-        m_currentObjectRef = luaL_ref(L, LUA_REGISTRYINDEX);
+        LuaEditor* editor = new LuaEditor(L);
+        ui->editorTabWidget->addTab(editor, p.nodeName.toAscii());
+        editor->setNodeRef(nodeRef);
+        editor->setText(p.source);
+        ui->editorTabWidget->setCurrentWidget(editor);
     }
-    populateAvarView();
+    populateAvarView(nodeRef);
 }
 
 void MainWindow::acceptChanges()
 {
-    if(m_currentObjectRef != LUA_NOREF)
+    LuaEditor* editor = static_cast<LuaEditor*>(ui->editorTabWidget->currentWidget());
+    if(editor->nodeRef() != LUA_NOREF)
     {
         try
         {
@@ -136,7 +178,7 @@ void MainWindow::acceptChanges()
                     lua_pop(L, 1);  /* << item */
                     return 0;
                 }
-            } p = { mainEditor->toPlainText().toAscii(), m_currentObjectRef };
+            } p = { editor->toPlainText().toAscii(), editor->nodeRef() };
             int res = lua_cpcall(L, C::call, &p);
             if( res != 0)
             {
@@ -144,7 +186,7 @@ void MainWindow::acceptChanges()
             }
             ui->graphicsView->updateGL();
             populateTree();
-            populateAvarView();
+            populateAvarView(editor->nodeRef());
         }
         catch(std::exception& e)
         {
@@ -299,7 +341,7 @@ void MainWindow::runCommand()
     ui->lineEdit->clear();
 }
 
-void MainWindow::populateAvarView()
+void MainWindow::populateAvarView(int nodeRef)
 {
     QMap<QString, QList<QPair<float, float> > > avarsList;
 
@@ -331,7 +373,7 @@ void MainWindow::populateAvarView()
                 lua_pop(L, 1);  /* << avars  */
                 return 0;
             }
-        } p = { QList<int>(), m_currentObjectRef };
+        } p = { QList<int>(), nodeRef };
         int res = lua_cpcall(L, C::call, &p);
         if(res != 0)
             throw(LuaError(L));

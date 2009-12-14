@@ -36,7 +36,8 @@ SOURCES += main.cpp \
     glwindow.cpp \
     openglwidget.cpp \
     avartableview.cpp \
-    draggablespinbox.cpp
+    draggablespinbox.cpp \
+    luaeditor.cpp
 HEADERS += mainwindow.h \
     avarlistmodel.h \
     scenetreemodel.h \
@@ -47,6 +48,7 @@ HEADERS += mainwindow.h \
     openglwidget.h \
     luaerror.h \
     avartableview.h \
-    draggablespinbox.h
+    draggablespinbox.h \
+    luaeditor.h
 FORMS += mainwindow.ui \
     glwindow.ui

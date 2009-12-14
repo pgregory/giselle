@@ -31,16 +31,26 @@
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QTextEdit" name="mainEditor">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="QTabWidget" name="editorTabWidget">
+          <property name="currentIndex">
+           <number>0</number>
           </property>
-          <property name="tabStopWidth">
-           <number>20</number>
+          <property name="tabsClosable">
+           <bool>true</bool>
           </property>
+          <property name="movable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="tab">
+           <attribute name="title">
+            <string>Tab 1</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="tab_2">
+           <attribute name="title">
+            <string>Tab 2</string>
+           </attribute>
+          </widget>
          </widget>
         </item>
         <item>
@@ -65,7 +75,7 @@
      <x>0</x>
      <y>0</y>
      <width>815</width>
-     <height>21</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -149,13 +159,10 @@
         <bool>false</bool>
        </attribute>
        <attribute name="verticalHeaderVisible">
-        <bool>true</bool>
+        <bool>false</bool>
        </attribute>
        <attribute name="verticalHeaderDefaultSectionSize">
         <number>18</number>
-       </attribute>
-       <attribute name="verticalHeaderVisible">
-        <bool>true</bool>
        </attribute>
       </widget>
      </item>
