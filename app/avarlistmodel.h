@@ -32,6 +32,7 @@ public:
     {
         populateModel();
     }
+    void clearFrame(QModelIndex& index);
 
 public slots:
     void startFrameChanged(int);
