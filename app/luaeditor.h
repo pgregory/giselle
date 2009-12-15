@@ -10,7 +10,7 @@ class LuaEditor : public QTextEdit
 {
 public:
     LuaEditor(lua_State* L);
-    ~LuaEditor();
+    virtual ~LuaEditor();
 
     int nodeRef() const
     {

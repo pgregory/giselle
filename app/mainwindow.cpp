@@ -61,7 +61,11 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
 
     QObject::connect(ui->cameraCombo, SIGNAL(currentIndexChanged(QString)), ui->graphicsView, SLOT(cameraChanged(QString)));
 
+    // Clear default tabs before connecting to make sure the slots are never called
+    // with invalid widgets.
     ui->editorTabWidget->clear();
+    QObject::connect(ui->editorTabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(editorTabClosed(int)));
+    QObject::connect(ui->editorTabWidget, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
 
     readSettings();
 }
@@ -148,9 +152,9 @@ void MainWindow::selectModel(const QModelIndex &index)
     if(res == 0)
     {
         LuaEditor* editor = new LuaEditor(L);
-        ui->editorTabWidget->addTab(editor, p.nodeName.toAscii());
         editor->setNodeRef(nodeRef);
         editor->setText(p.source);
+        ui->editorTabWidget->addTab(editor, p.nodeName.toAscii());
         ui->editorTabWidget->setCurrentWidget(editor);
     }
     populateAvarView(nodeRef);
@@ -535,7 +539,7 @@ void MainWindow::writeSettings()
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
     settings.setValue("pos", pos());
-    settings.setValue("state", saveState(2));
+    settings.setValue("state", saveState(3));
     settings.endGroup();
 }
 
@@ -546,7 +550,7 @@ void MainWindow::readSettings()
     settings.beginGroup("MainWindow");
     resize(settings.value("size", QSize(815, 600)).toSize());
     move(settings.value("pos", QPoint(200, 200)).toPoint());
-    restoreState(settings.value("state", QByteArray()).toByteArray(), 2);
+    restoreState(settings.value("state", QByteArray()).toByteArray(), 3);
     settings.endGroup();
 }
 
@@ -555,4 +559,21 @@ void MainWindow::closeEvent(QCloseEvent* event)
 {
     writeSettings();
     event->accept();
+}
+
+
+void MainWindow::editorTabClosed(int index)
+{
+    QWidget* tab = ui->editorTabWidget->widget(index);
+    ui->editorTabWidget->removeTab(index);
+    delete tab;
+}
+
+void MainWindow::editorTabChanged(int index)
+{
+    if(index < 0)
+        return;
+    LuaEditor* editor = static_cast<LuaEditor*>(ui->editorTabWidget->widget(index));
+    if(editor)
+        populateAvarView(editor->nodeRef());
 }

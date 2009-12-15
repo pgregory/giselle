@@ -42,6 +42,8 @@ public slots:
     void runCommand();
     void save();
     void load();
+    void editorTabClosed(int index);
+    void editorTabChanged(int index);
 
     void writeSettings();
     void readSettings();
