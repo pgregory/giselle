@@ -325,6 +325,22 @@ function CoordSysTransform:isEqual(other)
 	return true
 end
 
+
+LightSource = Renderable:clone()
+LightSource.renderop = "LightSource"
+LightSource.shadername = ""
+function LightSource:__call(shadername, paramList)
+	local o = self:create()
+	o.shadername = shadername
+	o.paramList = paramList or {} 
+	return o
+end
+function LightSource:isEqual(other)
+	return self.shadername == other.shadername
+	-- TODO: Need to work out how to compare the paramlist.
+end
+
+
 RecordTransform = Renderable:clone()
 RecordTransform.renderop = "RecordTransform"
 RecordTransform.name = ""

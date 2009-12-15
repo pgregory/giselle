@@ -52,7 +52,7 @@ protected:
     void closeEvent(QCloseEvent*);
 
 private:
-    void populateTree();
+    void populateTree(bool clear = false);
     void populateAvarView(int nodeRef);
 
     Ui::MainWindow *ui;

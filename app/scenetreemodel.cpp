@@ -26,11 +26,6 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
     m_camerasItem = new SceneTreeItem(L, cameraNodeData, CAMERAS, LUA_NOREF, m_rootItem);
     m_rootItem->appendChild(m_camerasItem);
 
-    QList<QVariant> lightNodeData;
-    lightNodeData << "Lights";
-    m_lightsItem = new SceneTreeItem(L, lightNodeData, LIGHTS, LUA_NOREF, m_rootItem);
-    m_rootItem->appendChild(m_lightsItem);
-
     // Add a world node.
     QList<QVariant> worldData;
     worldData << "World";
@@ -113,34 +108,9 @@ void SceneTreeModel::populateData(lua_State* L)
     }
     lua_pop(L, 1);                              // --
 
-    // Now fill in the cameras from the Lua state.
-    lua_getglobal(L, "Lightsources");                    // Lightsources
-    lua_pushnil(L); /* the first key */                  // Lightsources - nil
-    QModelIndex li = index(1, 0, QModelIndex());
-    while(lua_next(L, -2) != 0)                          // Lightsources - key - value
-    {
-        /* 'key' at -2, 'value' at -1 */
-        lua_getfield(L, -1, "name");                     // Lightsources - key - value - name
-        const char* name = lua_tostring(L, -1);
-        lua_pop(L, 1);                                   // Lightsources - key - value
-        QList<QVariant> lightData;
-        lightData << name;
-        int row;
-        if(!m_lightsItem->contains(lightData, row))
-        {
-            beginInsertRows(li, m_lightsItem->childCount(), m_lightsItem->childCount());
-            int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Lightsources - key
-            m_lightsItem->appendChild(new SceneTreeItem(L, lightData, LIGHT, nodeRef, m_lightsItem));
-            endInsertRows();
-        }
-        else
-            lua_pop(L, 1);                              // Lightsources - key
-    }
-    lua_pop(L, 1);                              // --
-
     // Now fill in the models from the Lua state.
     lua_getglobal(L, "World");                          // World
-    QModelIndex wi = index(2, 0, QModelIndex());
+    QModelIndex wi = index(1 , 0, QModelIndex());
     processSceneTree(L, m_worldItem, wi);
     lua_pop(L, 1);                                      // --
 }

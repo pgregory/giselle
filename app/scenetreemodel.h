@@ -28,7 +28,6 @@ public:
 private:
     SceneTreeItem* m_rootItem;
     SceneTreeItem* m_camerasItem;
-    SceneTreeItem* m_lightsItem;
     SceneTreeItem* m_worldItem;
 };
 

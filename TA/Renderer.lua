@@ -244,6 +244,9 @@ function Renderer:create(name)
 	function tab:CoordSysTransform(framestate, pass)
 		print("CoordSysTransform "..self.name)
 	end
+	function tab:LightSource(framestate, pass)
+		print("LightSource "..self.shadername)
+	end
 	function tab:RecordTransform(framestate, pass)
 		print("RecordTransform "..self.name)
 	end

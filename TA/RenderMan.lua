@@ -61,6 +61,9 @@ function RenderMan:create(name)
 	function tab:CoordSysTransform(framestate, pass)
 		ri.CoordSysTransform(self.name)
 	end
+	function tab:LightSource(framestate, pass)
+		ri.LightSource(self.shadername, self.paramList)
+	end
 	function tab:RecordTransform(framestate, pass)
 		framestate["transforms"][self.name] = r.matrixStack[#r.matrixStack]
 	end

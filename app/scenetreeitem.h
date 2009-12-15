@@ -12,12 +12,9 @@ extern "C" {
 enum _TreeItemType
 {
     ROOT,
-    MODELS,
     CAMERAS,
-    LIGHTS,
-    MODEL,
     CAMERA,
-    LIGHT,
+    MODEL,
     WORLD,
 };
 

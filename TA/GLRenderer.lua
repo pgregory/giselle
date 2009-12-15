@@ -130,6 +130,22 @@ function GLRenderer:create(name)
 			gl.LoadMatrix(mat)
 		end
 	end
+	function tab:LightSource(framestate, pass)
+		if pass < 1 then return end
+		local quad = glu.NewQuadric()
+        if GLRenderer.mode == 'LINES' then
+            glu.QuadricDrawStyle(quad, 'LINE')
+        else
+            glu.QuadricDrawStyle(quad, 'SOLID')
+        end
+		gl.PushAttrib('CURRENT_BIT')
+        gl.PushMatrix()
+		gl.Color(1,1,0)
+		gl.Translate(0, 0, -1)
+		glu.Cylinder(quad, 0.2, 0.0, 1, 12, 1)
+		gl.PopMatrix()
+		gl.PopAttrib('CURRENT_BIT')
+	end
 	function tab:RecordTransform(framestate, pass)
 		framestate["transforms"][self.name] = r.matrixStack[#r.matrixStack]
 	end

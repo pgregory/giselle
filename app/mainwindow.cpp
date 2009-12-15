@@ -400,8 +400,14 @@ void MainWindow::populateAvarView(int nodeRef)
 
 }
 
-void MainWindow::populateTree()
+void MainWindow::populateTree(bool clear)
 {
+    if(clear)
+    {
+        delete m_sceneModel;
+        m_sceneModel = NULL;
+    }
+
     if(!m_sceneModel)
     {
         m_sceneModel = new SceneTreeModel(L);
@@ -452,7 +458,7 @@ void MainWindow::populateTree()
     }
 
     // Set the World node as expanded.
-    ui->sceneTreeView->setExpanded(m_sceneModel->index(2,0,QModelIndex()), true);
+    ui->sceneTreeView->setExpanded(m_sceneModel->index(1,0,QModelIndex()), true);
 }
 
 void MainWindow::save()
@@ -528,7 +534,7 @@ void MainWindow::load()
         msgBox.setText(e.what());
         msgBox.exec();
     }
-    populateTree();
+    populateTree(true);
 }
 
 
