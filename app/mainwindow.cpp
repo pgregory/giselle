@@ -160,44 +160,50 @@ void MainWindow::selectModel(const QModelIndex &index)
     populateAvarView(nodeRef);
 }
 
+
+void MainWindow::saveCode(LuaEditor* editor) throw(LuaError)
+{
+    if(editor->nodeRef() != LUA_NOREF)
+    {
+        struct C
+        {
+            QString source;
+            int objref;
+            static int call(lua_State *L)
+            {
+                C* p = static_cast<C*>(lua_touserdata(L, 1));
+                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
+                lua_getfield(L, -1, "setBody"); // Get the setBody function.
+                lua_pushvalue(L, -2);   // Push self.
+                lua_pushstring(L, p->source.toAscii()); // Push new body text.
+                lua_call(L, 2, 0);
+                lua_pop(L, 1);  /* << item */
+                return 0;
+            }
+        } p = { editor->toPlainText().toAscii(), editor->nodeRef() };
+        int res = lua_cpcall(L, C::call, &p);
+        if( res != 0)
+        {
+            throw(LuaError(L));
+        }
+        ui->graphicsView->updateGL();
+        populateTree();
+        populateAvarView(editor->nodeRef());
+    }
+}
+
 void MainWindow::acceptChanges()
 {
     LuaEditor* editor = static_cast<LuaEditor*>(ui->editorTabWidget->currentWidget());
-    if(editor->nodeRef() != LUA_NOREF)
+    try
     {
-        try
-        {
-            struct C
-            {
-                QString source;
-                int objref;
-                static int call(lua_State *L)
-                {
-                    C* p = static_cast<C*>(lua_touserdata(L, 1));
-                    lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
-                    lua_getfield(L, -1, "setBody"); // Get the setBody function.
-                    lua_pushvalue(L, -2);   // Push self.
-                    lua_pushstring(L, p->source.toAscii()); // Push new body text.
-                    lua_call(L, 2, 0);
-                    lua_pop(L, 1);  /* << item */
-                    return 0;
-                }
-            } p = { editor->toPlainText().toAscii(), editor->nodeRef() };
-            int res = lua_cpcall(L, C::call, &p);
-            if( res != 0)
-            {
-                throw(LuaError(L));
-            }
-            ui->graphicsView->updateGL();
-            populateTree();
-            populateAvarView(editor->nodeRef());
-        }
-        catch(std::exception& e)
-        {
-            QMessageBox msgBox;
-            msgBox.setText(e.what());
-            msgBox.exec();
-        }
+        saveCode(editor);
+    }
+    catch(std::exception& e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(e.what());
+        msgBox.exec();
     }
 }
 
@@ -563,6 +569,59 @@ void MainWindow::readSettings()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+    // Check if any of the open editor tabs need to be saved.
+    bool unsaved = false;
+    for(int i = 0; i < ui->editorTabWidget->count(); ++i)
+    {
+        LuaEditor* editor = static_cast<LuaEditor*>(ui->editorTabWidget->widget(i));
+        if(editor->document()->isModified())
+            unsaved = true;
+    }
+    if(unsaved)
+    {
+        QMessageBox box;
+        box.setText("There are editors open with unsaved code.");
+        box.setInformativeText("Would you like to accept the changes first?");
+        box.setStandardButtons(QMessageBox::SaveAll | QMessageBox::Discard | QMessageBox::Cancel);
+        box.setDefaultButton(QMessageBox::SaveAll);
+        int res = box.exec();
+
+        switch(res)
+        {
+            case QMessageBox::SaveAll:
+            {
+                for(int i = 0; i < ui->editorTabWidget->count(); ++i)
+                {
+                    LuaEditor* editor = static_cast<LuaEditor*>(ui->editorTabWidget->widget(i));
+                    if(editor->document()->isModified())
+                    {
+                        try
+                        {
+                            saveCode(editor);
+                        }
+                        catch(LuaError& e)
+                        {
+                            QMessageBox err;
+                            err.setText(e.what());
+                            err.exec();
+                            event->ignore();
+                            return;
+                        }
+                    }
+                }
+            }
+            break;
+
+            case QMessageBox::Cancel:
+                event->ignore();
+                return;
+                break;
+
+            case QMessageBox::Discard:
+            default:
+                break;
+        }
+    }
     writeSettings();
     event->accept();
 }
@@ -570,7 +629,40 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::editorTabClosed(int index)
 {
-    QWidget* tab = ui->editorTabWidget->widget(index);
+    LuaEditor* tab = static_cast<LuaEditor*>(ui->editorTabWidget->widget(index));
+    if(tab->document()->isModified())
+    {
+        QMessageBox box;
+        box.setText("The code has been changed.");
+        box.setInformativeText("Do you want to accept the changes first?");
+        box.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        box.setDefaultButton(QMessageBox::Save);
+        int res = box.exec();
+
+        switch(res)
+        {
+            case QMessageBox::Cancel:
+                return;
+                break;
+            case QMessageBox::Save:
+                try
+                {
+                    saveCode(tab);
+                }
+                catch(LuaError& e)
+                {
+                    QMessageBox err;
+                    err.setText(e.what());
+                    err.exec();
+                    return;
+                }
+                break;
+            case QMessageBox::Discard:
+            default:
+                break;
+        }
+    }
+
     ui->editorTabWidget->removeTab(index);
     delete tab;
 }

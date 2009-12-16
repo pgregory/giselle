@@ -8,6 +8,7 @@
 #include <QModelIndex>
 
 #include "luahighlighter.h"
+#include "luaerror.h"
 
 extern "C" {
 #include "lua.h"
@@ -23,6 +24,7 @@ namespace Ui
 
 class AvarListModel;
 class SceneTreeModel;
+class LuaEditor;
 
 class MainWindow : public QMainWindow
 {
@@ -47,6 +49,8 @@ public slots:
 
     void writeSettings();
     void readSettings();
+
+    void saveCode(LuaEditor* editor) throw(LuaError);
 
 protected:
     void closeEvent(QCloseEvent*);
