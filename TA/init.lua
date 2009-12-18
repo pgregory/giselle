@@ -2,6 +2,7 @@
 --require('ri')
 
 -- Lua Modules
+matrix = require('TA/matrix')
 require('TA/Object')
 require('TA/Renderable')
 require('TA/CoordinateFrame')
@@ -14,4 +15,3 @@ require('TA/RenderMan')
 require('TA/GLRenderer')
 require('TA/tablesave')
 require('TA/Serialize')
-matrix = require('TA/matrix')

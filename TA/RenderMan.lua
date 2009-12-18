@@ -5,36 +5,36 @@ function RenderMan:create(name)
 
 	function tab:WorldBegin(framestate, pass)
 		Renderer.initTransform(r)
-		if pass < 1 then return end
+		if pass < 3 then return end
 		ri.WorldBegin()
 	end
 	function tab:WorldEnd(framestate, pass)
-		if pass < 1 then return end
+		if pass < 3 then return end
 		ri.WorldEnd()
 	end
 	function tab:TransformBegin(framestate, pass)
 		Renderer.pushTransform(r)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		ri.TransformBegin()
 	end
 	function tab:TransformEnd(framestate, pass)
 		Renderer.popTransform(r)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		ri.TransformEnd()
 	end
 	function tab:Translate(framestate, pass)
 		Renderer.translate(r, self.x, self.y, self.z)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		ri.Translate(self.x, self.y, self.z)
 	end
     function tab:Scale(framestate, pass)
 		Renderer.scale(r, self.x, self.y, self.z)
-		if pass < 1 then return end
+		if pass < 2 then return end
         ri.Scale(self.x, self.y, self.z)
     end
     function tab:Rotate(framestate, pass)
 		Renderer.rotate(r, self.angle, self.x, self.y, self.z)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		ri.Rotate(self.angle, self.x, self.y, self.z)
 	end
 	function tab:Cylinder(framestate, pass)
@@ -70,7 +70,7 @@ function RenderMan:create(name)
 	function tab:RestoreTransform(framestate, pass)
 		local mat = framestate["transforms"][self.name]
 		Renderer.setTransform(r, mat)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		ri.Transform(mat or matrix(4, "I"))
 	end
 

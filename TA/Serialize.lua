@@ -1,10 +1,12 @@
 function fixupScene(model)
-	for k,v in pairs(model.children) do
-		v = Model:clone(v)
-		for k,v in pairs(v.avars) do
-			setmetatable(v, Avar)
+	if model.children then
+		for k,v in pairs(model.children) do
+			v = Model:clone(v)
+			for k,v in pairs(v.avars) do
+				setmetatable(v, Avar)
+			end
+			fixupScene(v)
 		end
-		fixupScene(v)
 	end
 end
 

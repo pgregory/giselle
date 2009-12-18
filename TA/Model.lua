@@ -10,6 +10,15 @@ function Model:generate(time)
     return Renderable:popState()
 end 
 
+function Model:getRenderables(atTime)
+	local renderables = {}
+	for i,t in ipairs(atTime) do
+		local fn = self:generate(t)
+		table.insert(renderables, fn)
+	end
+	return renderables
+end
+
 function Model:avar(name, keyframes)
     local o = self.avars[name] or Avar:create(name, keyframes or {})
     self.avars[name] = o
@@ -34,6 +43,7 @@ function Model:model(name)
     o.name = name
     o.avars = {}
     o.body = nil
+	o.passes = { true, true, true }
 	o.children = {}
     function o:__call()
         self:create()
@@ -41,6 +51,29 @@ function Model:model(name)
     self.children[name] = o
     return o
 end
+
+
+function Model:camera(name)
+    if type(name) ~= "string" then
+        error("Must specify a name for a camera")
+        return
+    end
+	if self.children[name] then
+		return self.children[name]
+	end
+    local o = Camera:clone()
+    o.name = name
+    o.avars = {}
+    o.body = nil
+	o.passes = { true, true, false }
+    function o:__call()
+        self:create()
+    end
+    self.children[name] = o
+	Cameras[name] = o
+    return o
+end
+
 
 --[[
 Static utility functions

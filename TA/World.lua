@@ -4,6 +4,7 @@ World.startTime = 0
 World.endTime = 50
 World.children = {}
 World.name = "World"
+World.passes = { true, false, true }
 
 function World:generate(time)
 	Renderable:pushState()

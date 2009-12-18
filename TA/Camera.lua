@@ -15,17 +15,10 @@ function Camera:generate(time)
 	if(self.body) then
 		self:body(time or self.time)
 	end
+	CameraTransform(self)
 	return Renderable:popState()
 end
 
-function Camera:getRenderables(atTime)
-	local renderables = {}
-	for i,t in ipairs(atTime) do
-		local fn = self:generate(t)
-		table.insert(renderables, fn)
-	end
-	return renderables
-end
 
 --[[
 Static utility functions.
@@ -38,8 +31,9 @@ function Camera.new(name)
 	end
 	local c = Camera:clone()
 	c.name = name
+	c.passes = { 0 }
 	c.avars = {}
-        Cameras[name] = c
+	Cameras[name] = c
 	return c
 end
 

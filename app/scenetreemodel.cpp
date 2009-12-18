@@ -47,6 +47,11 @@ SceneTreeModel::~SceneTreeModel()
 void SceneTreeModel::processSceneTree(lua_State* L, SceneTreeItem* parent, const QModelIndex& wi)
 {
     lua_getfield(L, -1, "children");                    // children
+    if(lua_isnil(L, -1))
+    {
+        lua_pop(L, 1);
+        return;
+    }
     lua_pushnil(L); /* the first key */                 // children - nil
     while(lua_next(L, -2) != 0)                         // children - key - value
     {

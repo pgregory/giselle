@@ -135,6 +135,24 @@ function Rotate:isEqual(other)
 	return false
 end
 
+ConcatTransform = Renderable:clone()
+ConcatTransform.renderop = "ConcatTransform"
+ConcatTransform.matrix = matrix(4, "I")
+function ConcatTransform:__call(matrix)
+	local o = self:create()
+	o.matrix = matrix
+	return o
+end
+function ConcatTransform:isEqual(other)
+	if not Renderable.isEqual(self, other) then
+		return false
+	elseif self.matrix == other.matrix then
+		return true
+	end
+	return false
+end
+
+
 Cylinder = Renderable:clone()
 Cylinder.renderop = "Cylinder"
 Cylinder.radius = 1.0
@@ -341,6 +359,18 @@ function LightSource:isEqual(other)
 end
 
 
+CameraTransform = Renderable:clone()
+CameraTransform.renderop = "CameraTransform"
+CameraTransform.camera = nil
+function CameraTransform:__call(camera)
+	local o = self:create()
+	o.camera = camera
+	return o
+end
+function CameraTransform:isEqual(other)
+	return true
+end
+
 RecordTransform = Renderable:clone()
 RecordTransform.renderop = "RecordTransform"
 RecordTransform.name = ""
@@ -426,6 +456,8 @@ Renderable.transformNodes = {
 	RestoreTransform = 1,
 	WorldBegin = 1,
 	WorldEnd = 1,
+	CameraTransform = 1,
+	ConcatTransform = 1,
 }
 
 return Renderable

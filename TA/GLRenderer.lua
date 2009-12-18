@@ -28,7 +28,7 @@ function GLRenderer:create(name)
 
 	function tab:WorldBegin(framestate, pass)
 		Renderer.initTransform(r)
-		if pass < 1 then return end
+		if pass < 3 then return end
 		gl.MatrixMode('MODELVIEW')
 		gl.LoadIdentity()
 	end
@@ -36,31 +36,36 @@ function GLRenderer:create(name)
 	end
 	function tab:TransformBegin(framestate, pass)
 		Renderer.pushTransform(r)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		gl.PushMatrix()
 	end
 	function tab:TransformEnd(framestate, pass)
 		Renderer.popTransform(r)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		gl.PopMatrix()
 	end
 	function tab:Translate(framestate, pass)
 		Renderer.translate(r, self.x, self.y, self.z)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		gl.Translate(self.x, self.y, self.z)
 	end
     function tab:Scale(framestate, pass)
 		Renderer.scale(r, self.x, self.y, self.z)
-		if pass < 1 then return end
+		if pass < 2 then return end
         gl.Scale(self.x, self.y, self.z)
     end
     function tab:Rotate(framestate, pass)
 		Renderer.rotate(r, self.angle, self.x, self.y, self.z)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		gl.Rotate(self.angle, self.x, self.y, self.z)
 	end
+	function tab:ConcatTransform(framestate, pass)
+		Renderer.concatTransform(r, self.matrix)
+		io.stderr:write("\n\nCam Transform: "..matrix.tostring(self.matrix).."\n\n")
+		if pass < 2 then return end
+		gl.MultMatrix(self.matrix)
+	end
 	function tab:Cylinder(framestate, pass)
-		if pass < 1 then return end
         local quad = glu.NewQuadric()
         if GLRenderer.mode == 'LINES' then
             glu.QuadricDrawStyle(quad, 'LINE')
@@ -73,7 +78,6 @@ function GLRenderer:create(name)
 		gl.PopMatrix()
 	end
 	function tab:Sphere(framestate, pass)
-		if pass < 1 then return end
 		local quad = glu.NewQuadric()
         if GLRenderer.mode == 'LINES' then
             glu.QuadricDrawStyle(quad, 'LINE')
@@ -83,7 +87,6 @@ function GLRenderer:create(name)
         glu.Sphere(quad, self.radius, 12, 6)
 	end
 	function tab:Disk(framestate, pass)
-		if pass < 1 then return end
 		local quad = glu.NewQuadric()
         if GLRenderer.mode == 'LINES' then
             glu.QuadricDrawStyle(quad, 'LINE')
@@ -93,7 +96,6 @@ function GLRenderer:create(name)
         glu.Disk(quad, 0, self.radius, 12, 1)
 	end
 	function tab:PatchMesh(framestate, pass)
-		if pass < 1 then return end
 		gl.Begin('TRIANGLES')         -- Drawing Using Triangles
 		gl.Vertex( 0, 0.3, 0)         -- Move Up One Unit From Center (Top Point)
 		gl.Vertex(-0.3,-0.3, 0)         -- Left And Down One Unit (Bottom Left)
@@ -101,7 +103,6 @@ function GLRenderer:create(name)
 		gl.End()                      -- Done Drawing A Triangle
 	end
 	function tab:Polygon(framestate, pass)
-		if pass < 1 then return end
         if GLRenderer.mode == 'LINES' then
             gl.Begin('LINE_LOOP')
         else
@@ -115,7 +116,7 @@ function GLRenderer:create(name)
 		gl.End()
 	end
 	function tab:Projection(framestate, pass)
-		if pass < 1 then return end
+		if pass ~= 2 then return end
 		gl.MatrixMode('PROJECTION')
 		glu.Perspective(40, 320/240, 1, 5000)
 		gl.Scale(1, 1, -1)
@@ -124,14 +125,12 @@ function GLRenderer:create(name)
 		CoordinateFrame.set(self.name, r.matrixStack[#r.matrixStack])
 	end
 	function tab:CoordSysTransform(framestate, pass)
-		if pass < 1 then return end
 		local mat = CoordinateFrame.get(self.name)
 		if mat then
 			gl.LoadMatrix(mat)
 		end
 	end
 	function tab:LightSource(framestate, pass)
-		if pass < 1 then return end
 		local quad = glu.NewQuadric()
         if GLRenderer.mode == 'LINES' then
             glu.QuadricDrawStyle(quad, 'LINE')
@@ -146,13 +145,21 @@ function GLRenderer:create(name)
 		gl.PopMatrix()
 		gl.PopAttrib('CURRENT_BIT')
 	end
+	function tab:CameraTransform(framestate, pass)
+		-- Only record the camera transform during pass 1, it
+		-- will be 'used' during subsequent passes.
+		if pass > 1 then return end
+		local mat = r.matrixStack[#r.matrixStack]
+		mat = matrix.invert(mat)
+		framestate["cameraTransforms"][self.camera.name] = mat
+	end
 	function tab:RecordTransform(framestate, pass)
 		framestate["transforms"][self.name] = r.matrixStack[#r.matrixStack]
 	end
 	function tab:RestoreTransform(framestate, pass)
 		local mat = framestate["transforms"][self.name]
 		Renderer.setTransform(r, mat)
-		if pass < 1 then return end
+		if pass < 2 then return end
 		gl.LoadMatrix(mat or matrix(4, "I"))
 	end
 

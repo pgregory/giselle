@@ -54,39 +54,43 @@ function Renderer:renderIt(options)
 		self:display(options)
 		local f1 = frame
 		local times = { f1 }
-		local framestates = { { transforms = {} } }
+		local framestates = { { transforms = {}, cameraTransforms = {} } }
 		if options.motion_blur then
 			self:shutter(frame, frame+options.motion_blur)
 			local f2 = frame+1
 			times = { f1, f2 }
 			-- TODO: These should really be objects
-			framestates[2] = { transforms = {} }
+			framestates[2] = { transforms = {}, cameraTransforms = {} }
 		end
 
-		-- Pass 0 : Prep transforms
+		-- Pass 1 : Prep transforms
 		do
-			-- Camera
-                        if options.camera then
-                            local renderables = options.camera:getRenderables(times)
-                            self:renderRenderables(renderables, times, framestates, 0, function(node) return Renderable.transformNodes[node.renderop] end)
-                        end
-
 			-- World
 			renderables = options.world:getRenderables(times)
-			self:renderRenderables(renderables, times, framestates, 0, function(node) return Renderable.transformNodes[node.renderop] end)
+			self:renderRenderables(renderables, times, framestates, 1, function(node) return Renderable.transformNodes[node.renderop] end)
 		end
 
-		-- Pass 1 : Render
+		-- Pass 2 : Camera Setup
 		do
 			-- Camera
-                        if options.camera then
-                            local renderables = options.camera:getRenderables(times)
-                            self:renderRenderables(renderables, times, framestates, 1)
-                        end
+			if options.camera then
+				local renderables = options.camera:getRenderables(times)
+				self:renderRenderables(renderables, times, framestates, 2)
+				-- Generate a ConcatTransform renderable, and render it to 
+				-- perform the necessary camera transform.
+				camRenderables = {}
+				for i,t in ipairs(framestates) do
+					table.insert(camRenderables, { ConcatTransform(t["cameraTransforms"]["main"]) })
+				end
+				self:renderRenderables(camRenderables, times, framestates, 2)
+			end
+		end
 
+		-- Pass 3 : Render
+		do
 			-- World
 			renderables = options.world:getRenderables(times)
-			self:renderRenderables(renderables, times, framestates, 1)
+			self:renderRenderables(renderables, times, framestates, 3)
 		end
 		self:frameEnd()
 	end
@@ -101,36 +105,39 @@ end
 --]]
 function Renderer:renderRenderables(renderables, times, framestates, pass, filter)
 	for i,ro in ipairs(renderables[1]) do
-		if ro.group then
-			local subRenderables = {}
-			local f0 = ro:generate(times[1])
-			table.insert(subRenderables, f0)
-			for frame = 2, #renderables do
-				local fn = renderables[frame][i]:generate(times[frame])
-				table.insert(subRenderables, fn)
-			end
-			self:renderRenderables(subRenderables, times, framestates, pass, filter)
-		else
-			if ( filter == nil or type(filter) ~= "function" ) or filter(ro) then
-				local same = true
+		--if ro.passes == nil or ro.passes[pass] then
+		if 1 then
+			if ro.group then
+				local subRenderables = {}
+				local f0 = ro:generate(times[1])
+				table.insert(subRenderables, f0)
 				for frame = 2, #renderables do
-					if not ro:isEquivalent(renderables[frame][i]) then
-						print("Error: the rob lists for frames 1 and " .. frame .. " aren't compatible")
-					end
-					if not ro:isEqual(renderables[frame][i]) then
-						same = false
-						break
-					end
+					local fn = renderables[frame][i]:generate(times[frame])
+					table.insert(subRenderables, fn)
 				end
-				if same then
-					self:render(ro, framestates[1], pass)
-				else
-					ri.MotionBegin(times)
-					self:render(ro, framestates[1])
+				self:renderRenderables(subRenderables, times, framestates, pass, filter)
+			else
+				if ( filter == nil or type(filter) ~= "function" ) or filter(ro) then
+					local same = true
 					for frame = 2, #renderables do
-						self:render(renderables[frame][i], framestates[frame], pass)
+						if not ro:isEquivalent(renderables[frame][i]) then
+							print("Error: the rob lists for frames 1 and " .. frame .. " aren't compatible")
+						end
+						if not ro:isEqual(renderables[frame][i]) then
+							same = false
+							break
+						end
 					end
-					ri.MotionEnd()
+					if same then
+						self:render(ro, framestates[1], pass)
+					else
+						ri.MotionBegin(times)
+						self:render(ro, framestates[1])
+						for frame = 2, #renderables do
+							self:render(renderables[frame][i], framestates[frame], pass)
+						end
+						ri.MotionEnd()
+					end
 				end
 			end
 		end
@@ -187,6 +194,9 @@ function Renderer:scale(x, y, z)
 	scaleMat[3][3] = z
 	self.matrixStack[#self.matrixStack] = matrix.mul(scaleMat, self.matrixStack[#self.matrixStack])
 end
+function Renderer:concatTransform(mat)
+	self.matrixStack[#self.matrixStack] = matrix.mul(mat, self.matrixStack[#self.matrixStack])
+end
 
 function Renderer:create(name)
 	local r = self:clone()
@@ -220,6 +230,9 @@ function Renderer:create(name)
     function tab:Rotate(framestate, pass)
 		print("Rotate "..self.angle.." "..self.x.." "..self.y.." "..self.z)
 	end
+	function tab:ConcatTransform(framestate, pass)
+		print("ConcatTransform "..matrix.tostring(self.matrix))
+	end
 	function tab:Cylinder(framestate, pass)
 		print("Cylinder "..self.radius.." "..self.zmin.." "..self.zmax.." "..self.thetamax)
 	end
@@ -246,6 +259,9 @@ function Renderer:create(name)
 	end
 	function tab:LightSource(framestate, pass)
 		print("LightSource "..self.shadername)
+	end
+	function tab:CameraTransform(framestate, pass)
+		print("CameraTransform "..self.camera.name)
 	end
 	function tab:RecordTransform(framestate, pass)
 		print("RecordTransform "..self.name)
