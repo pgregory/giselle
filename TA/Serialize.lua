@@ -1,7 +1,11 @@
 function fixupScene(model)
 	if model.children then
 		for k,v in pairs(model.children) do
-			v = Model:clone(v)
+			if v.nodeType == "model" then
+				v = Model:clone(v)
+			elseif v.nodeType == "camera" then
+				v = Camera:clone(v)
+			end
 			for k,v in pairs(v.avars) do
 				setmetatable(v, Avar)
 			end

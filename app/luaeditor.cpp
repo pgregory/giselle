@@ -9,6 +9,8 @@ extern "C" {
 LuaEditor::LuaEditor(lua_State* L) : m_nodeRef(LUA_NOREF), m_L(L)
 {
     m_highlighter = new LuaHighlighter(document());
+    // Default tab width
+    setTabStopWidth(40);
 }
 
 LuaEditor::~LuaEditor()

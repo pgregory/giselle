@@ -21,11 +21,6 @@ SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
     rootData << "Scene";
     m_rootItem = new SceneTreeItem(L, rootData, ROOT);
 
-    QList<QVariant> cameraNodeData;
-    cameraNodeData << "Cameras";
-    m_camerasItem = new SceneTreeItem(L, cameraNodeData, CAMERAS, LUA_NOREF, m_rootItem);
-    m_rootItem->appendChild(m_camerasItem);
-
     // Add a world node.
     QList<QVariant> worldData;
     worldData << "World";
@@ -88,31 +83,6 @@ void SceneTreeModel::processSceneTree(lua_State* L, SceneTreeItem* parent, const
 
 void SceneTreeModel::populateData(lua_State* L)
 {
-    // Now fill in the cameras from the Lua state.
-    lua_getglobal(L, "Cameras");                         // Cameras
-    lua_pushnil(L); /* the first key */                  // Cameras - nil
-    QModelIndex ci = index(0, 0, QModelIndex());
-    while(lua_next(L, -2) != 0)                          // Cameras - key - value
-    {
-        /* 'key' at -2, 'value' at -1 */
-        lua_getfield(L, -1, "name");                     // Cameras - key - value - name
-        const char* name = lua_tostring(L, -1);
-        lua_pop(L, 1);                                   // Cameras - key - value
-        int row;
-        QList<QVariant> cameraData;
-        cameraData << name;
-        if(!m_camerasItem->contains(cameraData, row))
-        {
-            beginInsertRows(ci, m_camerasItem->childCount(), m_camerasItem->childCount());
-            int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Cameras - key
-            m_camerasItem->appendChild(new SceneTreeItem(L, cameraData, CAMERA, nodeRef, m_camerasItem));
-            endInsertRows();
-        }
-        else
-            lua_pop(L, 1);                              // Cameras - key
-    }
-    lua_pop(L, 1);                              // --
-
     // Now fill in the models from the Lua state.
     lua_getglobal(L, "World");                          // World
     QModelIndex wi = index(1 , 0, QModelIndex());

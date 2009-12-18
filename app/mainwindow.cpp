@@ -198,6 +198,7 @@ void MainWindow::acceptChanges()
     try
     {
         saveCode(editor);
+        editor->document()->setModified(false);
     }
     catch(std::exception& e)
     {
@@ -464,7 +465,7 @@ void MainWindow::populateTree(bool clear)
     }
 
     // Set the World node as expanded.
-    ui->sceneTreeView->setExpanded(m_sceneModel->index(1,0,QModelIndex()), true);
+    ui->sceneTreeView->setExpanded(m_sceneModel->index(0,0,QModelIndex()), true);
 }
 
 void MainWindow::save()
@@ -622,6 +623,14 @@ void MainWindow::closeEvent(QCloseEvent* event)
                 break;
         }
     }
+
+    for(int i = 0; i < ui->editorTabWidget->count(); ++i)
+    {
+        LuaEditor* editor = static_cast<LuaEditor*>(ui->editorTabWidget->widget(i));
+        ui->editorTabWidget->removeTab(i);
+        delete editor;
+    }
+
     writeSettings();
     event->accept();
 }
