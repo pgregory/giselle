@@ -37,7 +37,6 @@ function loadAll(name)
 		fixupScene(m.World)
 		Cameras = m.Cameras
 		World = m.World
-		io.stderr:write(World.bodySource)
 	else
 		error("This doesn't appear to be a valid system save")
 	end

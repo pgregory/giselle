@@ -460,4 +460,9 @@ Renderable.transformNodes = {
 	ConcatTransform = 1,
 }
 
+Renderable.cameraNodes = {
+	Projection = 1,
+	ConcatTransform = 1,
+}
+
 return Renderable

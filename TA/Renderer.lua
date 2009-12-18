@@ -75,14 +75,14 @@ function Renderer:renderIt(options)
 			-- Camera
 			if options.camera then
 				local renderables = options.camera:getRenderables(times)
-				self:renderRenderables(renderables, times, framestates, 2)
+				self:renderRenderables(renderables, times, framestates, 2, function(node) return Renderable.cameraNodes[node.renderop] end)
 				-- Generate a ConcatTransform renderable, and render it to 
 				-- perform the necessary camera transform.
 				camRenderables = {}
 				for i,t in ipairs(framestates) do
-					table.insert(camRenderables, { ConcatTransform(t["cameraTransforms"]["main"]) })
+					table.insert(camRenderables, { ConcatTransform(t["cameraTransforms"]["main"])  })
 				end
-				self:renderRenderables(camRenderables, times, framestates, 2)
+				self:renderRenderables(camRenderables, times, framestates, 2, function(node) return Renderable.cameraNodes[node.renderop] end)
 			end
 		end
 

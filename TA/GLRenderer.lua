@@ -26,6 +26,28 @@ function GLRenderer:create(name)
 		io.stderr:write(matrix.tostring(matx).."\n")
 	end
 
+	function r:printProjMat()
+		local a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p = gl.Get('PROJECTION_MATRIX')	
+		local matx = matrix(4, 4)
+		matx[1][1] = a
+		matx[1][2] = b
+		matx[1][3] = c
+		matx[1][4] = d
+		matx[2][1] = e
+		matx[2][2] = f
+		matx[2][3] = g
+		matx[2][4] = h
+		matx[3][1] = i
+		matx[3][2] = j
+		matx[3][3] = k
+		matx[3][4] = l
+		matx[4][1] = m
+		matx[4][2] = n
+		matx[4][3] = o
+		matx[4][4] = p
+		io.stderr:write(matrix.tostring(matx).."\n")
+	end
+
 	function tab:WorldBegin(framestate, pass)
 		Renderer.initTransform(r)
 		if pass < 3 then return end
@@ -61,7 +83,6 @@ function GLRenderer:create(name)
 	end
 	function tab:ConcatTransform(framestate, pass)
 		Renderer.concatTransform(r, self.matrix)
-		io.stderr:write("\n\nCam Transform: "..matrix.tostring(self.matrix).."\n\n")
 		if pass < 2 then return end
 		gl.MultMatrix(self.matrix)
 	end
