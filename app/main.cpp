@@ -1,6 +1,7 @@
 #include <QtGui/QApplication>
 #include "mainwindow.h"
 #include "glwindow.h"
+#include "datamanager.h"
 #include <QSharedPointer>
 #include <QDir>
 #include <QFile>
@@ -85,6 +86,9 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
     pmain(L);
+
+    // Initialise the data manager.
+    DataManager::instance().setLuaState(L);
 
     QApplication a(argc, argv);
     MainWindow w(L);
