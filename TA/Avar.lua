@@ -53,16 +53,16 @@ function Avar:removeKeyframe(kf)
 end
 
 function Avar:create(name, keyframes)
-        local o = {}
+	local o = {}
 	o.keyframes = {}
-        if #keyframes > 0 then
-            table.sort(keyframes, function(a,b) return a[1] < b[1] end)
-            for i,v in ipairs(keyframes) do
-                    o.keyframes[i] = KeyFrame:create(v[1], v[2])
-            end
+	if #keyframes > 0 then
+		table.sort(keyframes, function(a,b) return a[1] < b[1] end)
+		for i,v in ipairs(keyframes) do
+			o.keyframes[i] = KeyFrame:create(v[1], v[2])
+		end
 	end
 	o.name = name
-        setmetatable(o, Avar)
+	setmetatable(o, Avar)
 	return o
 end
 

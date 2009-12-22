@@ -15,11 +15,6 @@ public:
     AvarTableView(QWidget* parent = 0);
     virtual ~AvarTableView() {}
 
-    void initialiseLua(lua_State* L)
-    {
-        m_L = L;
-    }
-
     void contextMenuEvent(QContextMenuEvent* e);
     void mousePressEvent(QMouseEvent* event);
     void mouseMoveEvent(QMouseEvent* event);
@@ -30,7 +25,6 @@ public slots:
     void lock(int);
 
 private:
-    lua_State* m_L;
     bool        m_dragging;
     QModelIndex m_draggingIndex;
     double      m_draggingStartValue;

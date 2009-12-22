@@ -1,11 +1,21 @@
 #ifndef DATAMANAGER_H
 #define DATAMANAGER_H
 
+#include <QList>
+#include <QString>
+
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 }
 
+
+typedef struct _Keyframe
+{
+    int ref;
+    int frame;
+    float value;
+} Keyframe;
 
 class DataManager
 {
@@ -26,9 +36,17 @@ class DataManager
         return m_L;
     }
 
+    // General methods.
+    int cloneRef(int ref);
+    void releaseRef(int ref);
+
+    // Avar related methods.
+    void getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs);
+    QString getAvarNameFromRef(int avarRef);
     void setKeyframeFromRef(int keyframeRef, float value);
+    float getKeyframeFromRef(int keyframeRef);
     int addKeyframe(int avarRef, int index, float value);
-    float getKeyframe(int keyframeRef);
+    void deleteKeyframeFromRef(int avarRef, int keyframeRef);
 
  private:
     DataManager()   {}

@@ -5,22 +5,16 @@
 
 #include "avarlistmodel.h"
 #include "luaerror.h"
+#include "datamanager.h"
 
-typedef struct _KeyFrame
-{
-    int ref;
-    int frame;
-    float value;
-} KeyFrame;
-
-AvarListModel::AvarListModel(lua_State* L, const QList<int>& avars, int startFrame, int endFrame, QObject* parent) :
-            QAbstractTableModel(parent), m_L(L), m_currentTime(0)
+AvarListModel::AvarListModel(const QList<int>& avars, int startFrame, int endFrame, QObject* parent) :
+            QAbstractTableModel(parent), m_currentTime(0)
 {
     _startFrame = startFrame;
     _endFrame = endFrame;
     int i;
     foreach(i, m_avarRefs)
-        luaL_unref(m_L, LUA_REGISTRYINDEX, i);
+        DataManager::instance().releaseRef(i);
     m_avarRefs = avars;
     populateModel();
 }
@@ -152,61 +146,25 @@ void AvarListModel::populateModel()
     // Build a list of AvarItems from the list of avars passed.
     for(QList<int>::const_iterator av = m_avarRefs.begin(), end = m_avarRefs.end(); av != end; ++av)
     {
-        struct C
-        {
-            int avarRef;
-            QList<KeyFrame> keyframes;
-            QString name;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarRef);
-                lua_getfield(L, -1, "name");
-                p->name = lua_tostring(L, -1);
-                lua_pop(L, 1);  /* << name */
-                lua_getfield(L, -1, "keyframes");
-                lua_pushnil(L); /* the first key */
-                while(lua_next(L, -2) != 0)
-                {
-                    lua_getfield(L, -1, "frame");
-                    int frame = lua_tointeger(L, -1);
-                    lua_getfield(L, -2, "value");
-                    float value = lua_tonumber(L, -1);
-                    lua_pop(L, 2); // << value << frame
-                    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-                    KeyFrame kf = { ref, frame, value };
-                    p->keyframes << kf;
-                }
-                lua_pop(L, 2); /* << keyframes << ref */
-                return 0;
-            }
-        } p = { *av, QList<KeyFrame>(), "" };
-        try
-        {
-            int res = lua_cpcall(m_L, C::call, &p);
-            if(res != 0)
-                throw(LuaError(m_L));
-        }
-        catch(std::exception& e)
-        {
-            std::cerr << e.what() <<std::endl;
-        }
+        QString name = DataManager::instance().getAvarNameFromRef(*av);
+        QList<Keyframe> kfs;
+        DataManager::instance().getKeyframesFromRef(*av, kfs);
 
         // Now build a list of ints, over the span, filling in valid keyframes where available.
         QVector<int> keyframes;
 
         keyframes.insert(0, (_endFrame-_startFrame)+1, LUA_NOREF);
-        if(p.keyframes.size() > 0)
+        if(kfs.size() > 0)
         {
-            KeyFrame kf;
-            foreach(kf, p.keyframes)
+            Keyframe kf;
+            foreach(kf, kfs)
             {
                 if(kf.frame >= _startFrame && kf.frame <= _endFrame)
-                    keyframes.insert(kf.frame-_startFrame, kf.ref);
+                    keyframes[kf.frame-_startFrame] = kf.ref;
             }
         }
         _maxColumns = (_endFrame - _startFrame) + 1;
-        avarList << AvarListItem(m_L, *av, p.name, keyframes);
+        avarList << AvarListItem(*av, name, keyframes);
     }
 }
 
@@ -229,34 +187,7 @@ void AvarListModel::clearFrame(QModelIndex& index)
     const AvarListItem& av = avarListItem(index);
     int avarref = av.avarRef();
     int keyref = av.getKeyframeRef(index.column());
-    try
-    {
-        struct C
-        {
-            int avarref;
-            int keyref;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarref);  // Avar
-                lua_getfield(L, -1, "removeKeyframe");          // Avar - removeKeyframe
-                lua_pushvalue(L, -2);        // self            // Avar - removeKeyframe - Avar
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->keyref);   // Avar - removeKeyframe - Avar - key
-                lua_call(L, 2, 0);                              // Avar
-                lua_pop(L, 1);                                  // --
-                return 0;
-            }
-        } p = { avarref, keyref };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
+    DataManager::instance().deleteKeyframeFromRef(avarref, keyref);
     refresh();
     emit dataChanged(index, index);
 }

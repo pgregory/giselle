@@ -13,7 +13,7 @@ extern "C" {
 class AvarListItem
 {
 public:
-    AvarListItem(lua_State* L, int avarRef, const QString& name, const QVector<int> &keyframes);
+    AvarListItem(int avarRef, const QString& name, const QVector<int> &keyframes);
     AvarListItem(const AvarListItem& from);
     ~AvarListItem();
 
@@ -32,7 +32,6 @@ public:
 private:
     QString _name;
     int     m_avarRef;
-    lua_State* m_L;
     QVector<int> _keyframes;
  };
 

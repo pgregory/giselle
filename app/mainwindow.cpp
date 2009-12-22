@@ -35,7 +35,6 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
     ui->setupUi(this);
 
     ui->graphicsView->initialiseLua(L);
-    ui->avarTableView->initialiseLua(L);
 
     splitter = new QSplitter;
     splitter = ui->splitterEditTree;
@@ -389,7 +388,7 @@ void MainWindow::populateAvarView(int nodeRef)
         if(res != 0)
             throw(LuaError(L));
 
-        AvarListModel* model = new AvarListModel(L, p.avars, ui->timeMin->value(), ui->timeMax->value());
+        AvarListModel* model = new AvarListModel(p.avars, ui->timeMin->value(), ui->timeMax->value());
         ui->avarTableView->setModel(model);
         QObject::connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
         QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
