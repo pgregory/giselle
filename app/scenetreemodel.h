@@ -4,18 +4,17 @@
 #include <QtCore/QAbstractItemModel>
 
 class SceneTreeItem;
-struct lua_State;
 
 class SceneTreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 
 public:
-    SceneTreeModel(lua_State* L, QObject *parent = 0);
+    SceneTreeModel(QObject *parent = 0);
     virtual ~SceneTreeModel();
 
-    void processSceneTree(lua_State* L, SceneTreeItem* parent, const QModelIndex& index);
-    void populateData(lua_State* L);
+    void processSceneTree(int parentRef, SceneTreeItem* parent, const QModelIndex& index);
+    void populateData();
 
     QVariant data(const QModelIndex& index, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;

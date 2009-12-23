@@ -23,7 +23,7 @@ typedef _TreeItemType TreeItemType;
 class SceneTreeItem
 {
 public:
-    SceneTreeItem(lua_State* L, const QList<QVariant> &data, TreeItemType type, int nodeRef = LUA_NOREF, SceneTreeItem *parent = 0);
+    SceneTreeItem(const QList<QVariant> &data, TreeItemType type, int nodeRef = LUA_NOREF, SceneTreeItem *parent = 0);
     ~SceneTreeItem();
 
     void appendChild(SceneTreeItem *child);
@@ -52,7 +52,6 @@ private:
     TreeItemType itemType;
     SceneTreeItem *parentItem;
     int m_nodeRef;
-    lua_State*  m_L;
  };
 
 

@@ -1,6 +1,7 @@
 #include "avarlistitem.h"
 
 #include <QVariant>
+#include <QMessageBox>
 
 extern "C" {
 #include "lauxlib.h"
@@ -46,10 +47,19 @@ QString& AvarListItem::name()
 
 void AvarListItem::setKeyframe(int index, float value)
 {
-    if(_keyframes[index] != LUA_NOREF)
-        DataManager::instance().setKeyframeFromRef(_keyframes[index], value);
-    else
-        _keyframes[index] = DataManager::instance().addKeyframe(m_avarRef, index, value);
+    try
+    {
+        if(_keyframes[index] != LUA_NOREF)
+            DataManager::instance().setKeyframeFromRef(_keyframes[index], value);
+        else
+            _keyframes[index] = DataManager::instance().addKeyframe(m_avarRef, index, value);
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 
@@ -57,7 +67,17 @@ QVariant AvarListItem::getKeyframeValue(int index) const
 {
     if(_keyframes.size() <= index || _keyframes[index] == LUA_NOREF)
         return QVariant();
-    return DataManager::instance().getKeyframeFromRef(_keyframes[index]);
+    try
+    {
+        return DataManager::instance().getKeyframeFromRef(_keyframes[index]);
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+        return QVariant();
+    }
 }
 
 

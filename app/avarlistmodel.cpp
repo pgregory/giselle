@@ -142,29 +142,38 @@ void AvarListModel::populateModel()
 {
     avarList.clear();
 
-    _maxColumns = 0;
-    // Build a list of AvarItems from the list of avars passed.
-    for(QList<int>::const_iterator av = m_avarRefs.begin(), end = m_avarRefs.end(); av != end; ++av)
+    try
     {
-        QString name = DataManager::instance().getAvarNameFromRef(*av);
-        QList<Keyframe> kfs;
-        DataManager::instance().getKeyframesFromRef(*av, kfs);
-
-        // Now build a list of ints, over the span, filling in valid keyframes where available.
-        QVector<int> keyframes;
-
-        keyframes.insert(0, (_endFrame-_startFrame)+1, LUA_NOREF);
-        if(kfs.size() > 0)
+        _maxColumns = 0;
+        // Build a list of AvarItems from the list of avars passed.
+        for(QList<int>::const_iterator av = m_avarRefs.begin(), end = m_avarRefs.end(); av != end; ++av)
         {
-            Keyframe kf;
-            foreach(kf, kfs)
+            QString name = DataManager::instance().getAvarNameFromRef(*av);
+            QList<Keyframe> kfs;
+            DataManager::instance().getKeyframesFromRef(*av, kfs);
+
+            // Now build a list of ints, over the span, filling in valid keyframes where available.
+            QVector<int> keyframes;
+
+            keyframes.insert(0, (_endFrame-_startFrame)+1, LUA_NOREF);
+            if(kfs.size() > 0)
             {
-                if(kf.frame >= _startFrame && kf.frame <= _endFrame)
-                    keyframes[kf.frame-_startFrame] = kf.ref;
+                Keyframe kf;
+                foreach(kf, kfs)
+                {
+                    if(kf.frame >= _startFrame && kf.frame <= _endFrame)
+                        keyframes[kf.frame-_startFrame] = kf.ref;
+                }
             }
+            _maxColumns = (_endFrame - _startFrame) + 1;
+            avarList << AvarListItem(*av, name, keyframes);
         }
-        _maxColumns = (_endFrame - _startFrame) + 1;
-        avarList << AvarListItem(*av, name, keyframes);
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
     }
 }
 

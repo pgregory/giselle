@@ -40,34 +40,38 @@ class DataManager
     // General methods.
     int cloneRef(int ref);
     void releaseRef(int ref);
-    bool refsEqual(int refa, int refb);
+    bool refsEqual(int refa, int refb) throw(LuaError);
     void runCommand(const QString& command) throw(LuaError);
     void saveData(const QString& filename) throw(LuaError);
     void loadData(const QString& filename) throw(LuaError);
 
     // Avar related methods.
-    void getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs);
-    QString getAvarNameFromRef(int avarRef);
-    void setKeyframeFromRef(int keyframeRef, float value);
-    float getKeyframeFromRef(int keyframeRef);
-    int addKeyframe(int avarRef, int index, float value);
-    void deleteKeyframeFromRef(int avarRef, int keyframeRef);
+    void getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs) throw(LuaError);
+    QString getAvarNameFromRef(int avarRef) throw(LuaError);
+    void setKeyframeFromRef(int keyframeRef, float value) throw(LuaError);
+    float getKeyframeFromRef(int keyframeRef) throw(LuaError);
+    int addKeyframe(int avarRef, int index, float value) throw(LuaError);
+    void deleteKeyframeFromRef(int avarRef, int keyframeRef) throw(LuaError);
 
     // Node methods
-    QString nodeNameFromRef(int nodeRef);
-    QString nodeSourceFromRef(int nodeRef);
+    QString nodeNameFromRef(int nodeRef) throw(LuaError);
+    QString nodeSourceFromRef(int nodeRef) throw(LuaError);
     void setNodeSourceFromRef(int nodeRef, const QString& source) throw(LuaError);
     void getNodeAvarsFromRef(int nodeRef, QList<int>& avarRefs) throw(LuaError);
-    void getCameraNodeRefs(QList<int>& refs);
+    void getCameraNodeRefs(QList<int>& refs) throw(LuaError);
+    void getNodeChildrendRefsFromRef(int nodeRef, QList<int>& children) throw(LuaError);
 
     // World methods
-    void setStartFrame(int frame);
-    void setEndFrame(int frame);
-    int getStartFrame();
-    int getEndFrame();
+    int getWorldRef() throw(LuaError);
+    void setStartFrame(int frame) throw(LuaError);
+    void setEndFrame(int frame) throw(LuaError);
+    int getStartFrame() throw(LuaError);
+    int getEndFrame() throw(LuaError);
 
     // Rendering methods
-    void renderRenderMan();
+    void renderRenderMan() throw(LuaError);
+    int createGLRendererRef() throw(LuaError);
+    void renderGL(int rendererRef, int frame, const QString& cameraName) throw(LuaError);
 
  private:
     DataManager()   {}

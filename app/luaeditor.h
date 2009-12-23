@@ -3,13 +3,12 @@
 
 #include <QTextEdit>
 
-struct lua_State;
 class LuaHighlighter;
 
 class LuaEditor : public QTextEdit
 {
 public:
-    LuaEditor(lua_State* L);
+    LuaEditor();
     virtual ~LuaEditor();
 
     int nodeRef() const
@@ -20,7 +19,6 @@ public:
 
 private:
     int m_nodeRef;
-    lua_State* m_L;
     LuaHighlighter* m_highlighter;
 };
 

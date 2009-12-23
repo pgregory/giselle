@@ -17,37 +17,27 @@ void DataManager::releaseRef(int ref)
     luaL_unref(m_L, LUA_REGISTRYINDEX, ref);
 }
 
-bool DataManager::refsEqual(int refa, int refb)
+bool DataManager::refsEqual(int refa, int refb) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        int indexa, indexb;
+        bool equal;
+        static int call(lua_State* L)
         {
-            int indexa, indexb;
-            bool equal;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexa);
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexb);
-                p->equal = lua_rawequal(L, -1, -2) != 0;
-                lua_pop(L, 2);
-                return 0;
-            }
-        } p = { refa, refb, false };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexa);
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexb);
+            p->equal = lua_rawequal(L, -1, -2) != 0;
+            lua_pop(L, 2);
+            return 0;
+        }
+    } p = { refa, refb, false };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
 
-        return p.equal;
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox box;
-        box.setText(e.what());
-        box.exec();
-        return false;
-    }
+    return p.equal;
 }
 
 
@@ -109,7 +99,7 @@ void DataManager::loadData(const QString& filename) throw(LuaError)
 }
 
 
-void DataManager::setKeyframeFromRef(int keyframeRef, float value)
+void DataManager::setKeyframeFromRef(int keyframeRef, float value) throw(LuaError)
 {
     assert(NULL != m_L);
 
@@ -127,20 +117,13 @@ void DataManager::setKeyframeFromRef(int keyframeRef, float value)
             return 0;
         }
     } p = { keyframeRef, value };
-    try
-    {
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        std::cerr << e.what() <<std::endl;
-    }
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
 }
 
 
-int DataManager::addKeyframe(int avarRef, int index, float value)
+int DataManager::addKeyframe(int avarRef, int index, float value) throw(LuaError)
 {
     assert(NULL != m_L);
 
@@ -164,51 +147,36 @@ int DataManager::addKeyframe(int avarRef, int index, float value)
             return 0;
         }
     } p = { avarRef, index, value, 0 };
-    try
-    {
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        std::cerr << e.what() <<std::endl;
-    }
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
     return p.keyRef;
 }
 
-float DataManager::getKeyframeFromRef(int keyframeRef)
+float DataManager::getKeyframeFromRef(int keyframeRef) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        int keyRef;
+        float value;
+        static int call(lua_State* L)
         {
-            int keyRef;
-            float value;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->keyRef);
-                lua_getfield(L, -1, "value");
-                p->value = lua_tonumber(L, -1);
-                lua_pop(L, 2); /* << value << keyref */
-                return 0;
-            }
-        } p = { keyframeRef, 0.0f };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-        return p.value;
-    }
-    catch(std::exception& e)
-    {
-        std::cerr << e.what() <<std::endl;
-        return 0.0f;
-    }
+            C* p = static_cast<C*>(lua_touserdata(L, 1));
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->keyRef);
+            lua_getfield(L, -1, "value");
+            p->value = lua_tonumber(L, -1);
+            lua_pop(L, 2); /* << value << keyref */
+            return 0;
+        }
+    } p = { keyframeRef, 0.0f };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.value;
 }
 
 
-QString DataManager::getAvarNameFromRef(int avarRef)
+QString DataManager::getAvarNameFromRef(int avarRef) throw(LuaError)
 {
     struct C
     {
@@ -224,21 +192,13 @@ QString DataManager::getAvarNameFromRef(int avarRef)
             return 0;
         }
     } p = { avarRef, "" };
-    try
-    {
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-        return p.name;
-    }
-    catch(std::exception& e)
-    {
-        std::cerr << e.what() <<std::endl;
-    }
-    return "";
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.name;
 }
 
-void DataManager::getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs)
+void DataManager::getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs) throw(LuaError)
 {
     struct C
     {
@@ -269,126 +229,90 @@ void DataManager::getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs)
             return 0;
         }
     } p = { avarRef, kfs, "" };
-    try
-    {
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        std::cerr << e.what() <<std::endl;
-    }
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
 }
 
-void DataManager::deleteKeyframeFromRef(int avarRef, int keyframeRef)
+void DataManager::deleteKeyframeFromRef(int avarRef, int keyframeRef) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        int avarref;
+        int keyref;
+        static int call(lua_State* L)
         {
-            int avarref;
-            int keyref;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarref);  // Avar
-                lua_getfield(L, -1, "removeKeyframe");          // Avar - removeKeyframe
-                lua_pushvalue(L, -2);        // self            // Avar - removeKeyframe - Avar
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->keyref);   // Avar - removeKeyframe - Avar - key
-                lua_call(L, 2, 0);                              // Avar
-                lua_pop(L, 1);                                  // --
-                return 0;
-            }
-        } p = { avarRef, keyframeRef };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarref);  // Avar
+            lua_getfield(L, -1, "removeKeyframe");          // Avar - removeKeyframe
+            lua_pushvalue(L, -2);        // self            // Avar - removeKeyframe - Avar
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->keyref);   // Avar - removeKeyframe - Avar - key
+            lua_call(L, 2, 0);                              // Avar
+            lua_pop(L, 1);                                  // --
+            return 0;
+        }
+    } p = { avarRef, keyframeRef };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
 }
 
 
-QString DataManager::nodeNameFromRef(int nodeRef)
+QString DataManager::nodeNameFromRef(int nodeRef) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        QString nodeName;
+        int     objref;
+        static int call(lua_State *L)
         {
-            QString nodeName;
-            int     objref;
-            static int call(lua_State *L)
+            C* p = static_cast<C*>(lua_touserdata(L, 1));
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
+            if(lua_isnil(L, -1))
             {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
-                if(lua_isnil(L, -1))
-                {
-                    lua_pushstring(L, "Error, item is nil!");
-                    lua_error(L);
-                }
-                lua_getfield(L, -1, "name");
-                const char* name = lua_tostring(L, -1);
-                p->nodeName = name;
-                lua_pop(L, 1);  /* << name */
-                return 0;
+                lua_pushstring(L, "Error, item is nil!");
+                lua_error(L);
             }
-        } p = { "", nodeRef };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-        return p.nodeName;
-    }
-    catch(LuaError& e)
-    {
-        QMessageBox box;
-        box.setText(e.what());
-        box.exec();
-        return "";
-    }
+            lua_getfield(L, -1, "name");
+            const char* name = lua_tostring(L, -1);
+            p->nodeName = name;
+            lua_pop(L, 1);  /* << name */
+            return 0;
+        }
+    } p = { "", nodeRef };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.nodeName;
 }
 
 
-QString DataManager::nodeSourceFromRef(int nodeRef)
+QString DataManager::nodeSourceFromRef(int nodeRef) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        QString nodeSource;
+        int     objref;
+        static int call(lua_State *L)
         {
-            QString nodeSource;
-            int     objref;
-            static int call(lua_State *L)
+            C* p = static_cast<C*>(lua_touserdata(L, 1));
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
+            if(lua_isnil(L, -1))
             {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
-                if(lua_isnil(L, -1))
-                {
-                    lua_pushstring(L, "Error, item is nil!");
-                    lua_error(L);
-                }
-                lua_getfield(L, -1, "bodySource");
-                const char* source = lua_tostring(L, -1);
-                p->nodeSource = source;
-                lua_pop(L, 1);  /* << name */
-                return 0;
+                lua_pushstring(L, "Error, item is nil!");
+                lua_error(L);
             }
-        } p = { "", nodeRef };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-        return p.nodeSource;
-    }
-    catch(LuaError& e)
-    {
-        QMessageBox box;
-        box.setText(e.what());
-        box.exec();
-        return "";
-    }
+            lua_getfield(L, -1, "bodySource");
+            const char* source = lua_tostring(L, -1);
+            p->nodeSource = source;
+            lua_pop(L, 1);  /* << name */
+            return 0;
+        }
+    } p = { "", nodeRef };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.nodeSource;
 }
 
 
@@ -456,220 +380,279 @@ void DataManager::getNodeAvarsFromRef(int nodeRef, QList<int>& avarRefs) throw(L
 }
 
 
-void DataManager::getCameraNodeRefs(QList<int>& refs)
+void DataManager::getCameraNodeRefs(QList<int>& refs) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        QList<int>& refs;
+        static int call(lua_State* L)
         {
-            QList<int>& refs;
-            static int call(lua_State* L)
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            // Now fill in the cameras from the Lua state.
+            lua_getglobal(L, "Cameras");                         // Cameras
+            lua_pushnil(L); /* the first key */                  // Cameras - nil
+            while(lua_next(L, -2) != 0)                          // Cameras - key - value
             {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                // Now fill in the cameras from the Lua state.
-                lua_getglobal(L, "Cameras");                         // Cameras
-                lua_pushnil(L); /* the first key */                  // Cameras - nil
-                while(lua_next(L, -2) != 0)                          // Cameras - key - value
-                {
-                    /* 'key' at -2, 'value' at -1 */
-                    int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Cameras - key
-                    p->refs.append(nodeRef);
-                }
-                lua_pop(L, 1);                              // --
-                return 0;
+                /* 'key' at -2, 'value' at -1 */
+                int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Cameras - key
+                p->refs.append(nodeRef);
             }
-        } p = { refs };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
-}
-
-void DataManager::setStartFrame(int frame)
-{
-    try
-    {
-        struct C
-        {
-            int frame;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "World");          // World
-                if(!lua_isnil(L, -1))
-                {
-                    lua_pushinteger(L, p->frame);       // World - frame
-                    lua_setfield(L, -2, "startTime");   // World
-                }
-                lua_pop(L, 1);                      // --
-                return 0;
-            }
-        } p = { frame };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
+            lua_pop(L, 1);                              // --
+            return 0;
+        }
+    } p = { refs };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
 }
 
 
-void DataManager::setEndFrame(int frame)
+void DataManager::getNodeChildrendRefsFromRef(int nodeRef, QList<int>& children) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        int parentRef;
+        QList<int>& children;
+        static int call(lua_State* L)
         {
-            int frame;
-            static int call(lua_State* L)
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->parentRef);    // parent
+            lua_getfield(L, -1, "children");                    // parent - children
+            if(lua_isnil(L, -1))
             {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "World");          // World
-                if(!lua_isnil(L, -1))
-                {
-                    lua_pushinteger(L, p->frame);       // World - frame
-                    lua_setfield(L, -2, "endTime");   // World
-                }
-                lua_pop(L, 1);                      // --
+                lua_pop(L, 1);
                 return 0;
             }
-        } p = { frame };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
-}
-
-int DataManager::getStartFrame()
-{
-    try
-    {
-        struct C
-        {
-            int frame;
-            static int call(lua_State* L)
+            lua_pushnil(L); /* the first key */                 // parent - children - nil
+            while(lua_next(L, -2) != 0)                         // parent - children - key - value
             {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "World");          // World
-                if(!lua_isnil(L, -1))
-                {
-                    lua_getfield(L, -1, "startTime");   // World - startTime
-                    p->frame = lua_tointeger(L, -1);
-                    lua_pop(L, 1);                      // World
-                }
-                lua_pop(L, 1);                      // --
-                return 0;
+                /* 'key' at -2, 'value' at -1 */
+                int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);   // parent - children - key - value
+                p->children.append(nodeRef);
             }
-        } p = { 0 };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-        return p.frame;
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
-    return 0;
+            lua_pop(L, 2);                                      // --
+            return 0;
+        }
+    } p = { nodeRef, children };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
 }
 
 
-int DataManager::getEndFrame()
+void DataManager::setStartFrame(int frame) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        int frame;
+        static int call(lua_State* L)
         {
-            int frame;
-            static int call(lua_State* L)
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_getglobal(L, "World");          // World
+            if(!lua_isnil(L, -1))
             {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "World");          // World
-                if(!lua_isnil(L, -1))
-                {
-                    lua_getfield(L, -1, "endTime");   // World - endTime
-                    p->frame = lua_tointeger(L, -1);
-                    lua_pop(L, 1);                      // World
-                }
-                lua_pop(L, 1);                      // --
-                return 0;
+                lua_pushinteger(L, p->frame);       // World - frame
+                lua_setfield(L, -2, "startTime");   // World
             }
-        } p = { 0 };
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
-        return p.frame;
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
-    return 0;
+            lua_pop(L, 1);                      // --
+            return 0;
+        }
+    } p = { frame };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
 }
 
 
-void DataManager::renderRenderMan()
+void DataManager::setEndFrame(int frame) throw(LuaError)
 {
-    try
+    struct C
     {
-        struct C
+        int frame;
+        static int call(lua_State* L)
         {
-            static int call(lua_State* L)
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_getglobal(L, "World");          // World
+            if(!lua_isnil(L, -1))
             {
-                //C* p = static_cast<C*>(lua_touserdata(L, 1));
-                // Create a new RenderMan renderer
-                lua_getglobal(L, "RenderMan");      // RenderMan
-                lua_getfield(L, -1, "create");      // RenderMan - create
-                lua_pushvalue(L, -2);   // self     // RenderMan - create - GLRenderer
-                lua_pushstring(L, "test");          // RenderMan - create - GLRenderer - name
-                lua_call(L, 2, 1);                  // RenderMan - newrenderer
-                lua_getfield(L, -1, "renderIt");    // RenderMan - newrenderer - renderIt
-                lua_pushvalue(L, -2); // self       // RenderMan - newrenderer - renderIt - newrenderer
-                lua_newtable(L);                    // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_getglobal(L, "World");          // RenderMan - newrenderer - renderIt - newrenderer - table - World
-                lua_setfield(L, -2, "world");       // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_getglobal(L, "Cameras");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
-                lua_getfield(L, -1, "main");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras - main
-                lua_setfield(L, -3, "camera");      // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
-                lua_pop(L, 1);                      // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_pushinteger(L, 320);            // RenderMan - newrenderer - renderIt - newrenderer - table - 320
-                lua_setfield(L, -2, "xres");        // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_pushinteger(L, 240);            // RenderMan - newrenderer - renderIt - newrenderer - table - 240
-                lua_setfield(L, -2, "yres");        // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_call(L, 2, 0);                  // RenderMan - newrenderer
-                lua_pop(L, 2);                      // --
-                return 0;
+                lua_pushinteger(L, p->frame);       // World - frame
+                lua_setfield(L, -2, "endTime");   // World
             }
-        } p;
-        int res = lua_cpcall(m_L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(m_L));
+            lua_pop(L, 1);                      // --
+            return 0;
+        }
+    } p = { frame };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+}
 
-    }
-    catch(std::exception & e)
+int DataManager::getStartFrame() throw(LuaError)
+{
+    struct C
     {
-        std::cerr << e.what() <<std::endl;
-    }
+        int frame;
+        static int call(lua_State* L)
+        {
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_getglobal(L, "World");          // World
+            if(!lua_isnil(L, -1))
+            {
+                lua_getfield(L, -1, "startTime");   // World - startTime
+                p->frame = lua_tointeger(L, -1);
+                lua_pop(L, 1);                      // World
+            }
+            lua_pop(L, 1);                      // --
+            return 0;
+        }
+    } p = { 0 };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.frame;
 }
 
 
+int DataManager::getEndFrame() throw(LuaError)
+{
+    struct C
+    {
+        int frame;
+        static int call(lua_State* L)
+        {
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_getglobal(L, "World");          // World
+            if(!lua_isnil(L, -1))
+            {
+                lua_getfield(L, -1, "endTime");   // World - endTime
+                p->frame = lua_tointeger(L, -1);
+                lua_pop(L, 1);                      // World
+            }
+            lua_pop(L, 1);                      // --
+            return 0;
+        }
+    } p = { 0 };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.frame;
+}
+
+int DataManager::getWorldRef() throw(LuaError)
+{
+    struct C
+    {
+        int worldRef;
+        static int call(lua_State* L)
+        {
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_getglobal(L, "World");
+            p->worldRef = luaL_ref(L, LUA_REGISTRYINDEX);
+            return 0;
+        }
+    } p = { LUA_NOREF };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.worldRef;
+}
+
+
+void DataManager::renderRenderMan() throw(LuaError)
+{
+    struct C
+    {
+        static int call(lua_State* L)
+        {
+            //C* p = static_cast<C*>(lua_touserdata(L, 1));
+            // Create a new RenderMan renderer
+            lua_getglobal(L, "RenderMan");      // RenderMan
+            lua_getfield(L, -1, "create");      // RenderMan - create
+            lua_pushvalue(L, -2);   // self     // RenderMan - create - GLRenderer
+            lua_pushstring(L, "test");          // RenderMan - create - GLRenderer - name
+            lua_call(L, 2, 1);                  // RenderMan - newrenderer
+            lua_getfield(L, -1, "renderIt");    // RenderMan - newrenderer - renderIt
+            lua_pushvalue(L, -2); // self       // RenderMan - newrenderer - renderIt - newrenderer
+            lua_newtable(L);                    // RenderMan - newrenderer - renderIt - newrenderer - table
+            lua_getglobal(L, "World");          // RenderMan - newrenderer - renderIt - newrenderer - table - World
+            lua_setfield(L, -2, "world");       // RenderMan - newrenderer - renderIt - newrenderer - table
+            lua_getglobal(L, "Cameras");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
+            lua_getfield(L, -1, "main");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras - main
+            lua_setfield(L, -3, "camera");      // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
+            lua_pop(L, 1);                      // RenderMan - newrenderer - renderIt - newrenderer - table
+            lua_pushinteger(L, 320);            // RenderMan - newrenderer - renderIt - newrenderer - table - 320
+            lua_setfield(L, -2, "xres");        // RenderMan - newrenderer - renderIt - newrenderer - table
+            lua_pushinteger(L, 240);            // RenderMan - newrenderer - renderIt - newrenderer - table - 240
+            lua_setfield(L, -2, "yres");        // RenderMan - newrenderer - renderIt - newrenderer - table
+            lua_call(L, 2, 0);                  // RenderMan - newrenderer
+            lua_pop(L, 2);                      // --
+            return 0;
+        }
+    } p;
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+}
+
+
+int DataManager::createGLRendererRef() throw(LuaError)
+{
+    struct C
+    {
+        int glrendref;
+        static int call(lua_State* L)
+        {
+            C* p = static_cast<C*>(lua_touserdata(L, -1));
+            lua_getglobal(L, "GLRenderer");     // GLRenderer
+            lua_getfield(L, -1, "create");      // GLRenderer - create
+            lua_pushvalue(L, -2);   // self     // GLRenderer - create - GLRenderer
+            lua_pushstring(L, "test");          // GLRenderer - create - GLRenderer - name
+            lua_call(L, 2, 1);                  // GLRenderer - newrenderer
+            p->glrendref = luaL_ref(L, LUA_REGISTRYINDEX);     // GLRenderer
+            lua_pop(L, 1);
+            return 0;
+        }
+    } p = { 0 };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+    return p.glrendref;
+}
+
+
+void DataManager::renderGL(int rendererRef, int frame, const QString& cameraName) throw(LuaError)
+{
+    struct C
+    {
+        int rendererref;
+        int time;
+        QString cameraName;
+        static int call(lua_State* L)
+        {
+            C* p = static_cast<C*>(lua_touserdata(L, 1));
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->rendererref);
+            lua_getfield(L, -1, "renderIt");
+            lua_pushvalue(L, -2);
+            lua_newtable(L);
+            lua_getglobal(L, "World");
+            lua_setfield(L, -2, "world");
+            if(!p->cameraName.isEmpty())
+            {
+                lua_getglobal(L, "Cameras");
+                lua_getfield(L, -1, p->cameraName.toAscii());
+                lua_setfield(L, -3, "camera");
+                lua_pop(L, 1);  // << Cameras
+            }
+            lua_pushinteger(L, p->time);
+            lua_setfield(L, -2, "start");
+            lua_pushinteger(L, p->time);
+            lua_setfield(L, -2, "stop");
+            lua_call(L, 2, 0);
+            lua_pop(L, 1);  /* << renderer" */
+            return 0;
+        }
+    } p = { rendererRef, frame, cameraName };
+    int res = lua_cpcall(m_L, C::call, &p);
+    if(res != 0)
+        throw(LuaError(m_L));
+}

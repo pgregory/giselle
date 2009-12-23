@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->setupUi(this);
 
-    ui->graphicsView->initialiseLua(DataManager::instance().getLuaState());
+    ui->graphicsView->initialise();
 
     splitter = new QSplitter;
     splitter = ui->splitterEditTree;
@@ -80,40 +80,58 @@ void MainWindow::selectModel(const QModelIndex &index)
     if(!index.isValid())
         return;
 
-    SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
-    int nodeRef = item->nodeRef();
-
-    // Check if the model is already opened.
-    for(int i = 0; i < ui->editorTabWidget->count(); ++i)
+    try
     {
-        if(DataManager::instance().refsEqual(nodeRef, static_cast<LuaEditor*>(ui->editorTabWidget->widget(i))->nodeRef()))
+        SceneTreeItem *item = static_cast<SceneTreeItem*>(index.internalPointer());
+        int nodeRef = item->nodeRef();
+
+        // Check if the model is already opened.
+        for(int i = 0; i < ui->editorTabWidget->count(); ++i)
         {
-            ui->editorTabWidget->setCurrentIndex(i);
-            return;
+            if(DataManager::instance().refsEqual(nodeRef, static_cast<LuaEditor*>(ui->editorTabWidget->widget(i))->nodeRef()))
+            {
+                ui->editorTabWidget->setCurrentIndex(i);
+                return;
+            }
         }
+
+        QMap<QString, QList<QPair<float, float> > > avarsList;
+
+        QString name = DataManager::instance().nodeNameFromRef(nodeRef);
+        QString source = DataManager::instance().nodeSourceFromRef(nodeRef);
+
+        LuaEditor* editor = new LuaEditor();
+        editor->setNodeRef(nodeRef);
+        editor->setText(source);
+        ui->editorTabWidget->addTab(editor, name.toAscii());
+        ui->editorTabWidget->setCurrentWidget(editor);
+
+        populateAvarView(nodeRef);
     }
-
-    QMap<QString, QList<QPair<float, float> > > avarsList;
-
-    QString name = DataManager::instance().nodeNameFromRef(nodeRef);
-    QString source = DataManager::instance().nodeSourceFromRef(nodeRef);
-
-    LuaEditor* editor = new LuaEditor(DataManager::instance().getLuaState());
-    editor->setNodeRef(nodeRef);
-    editor->setText(source);
-    ui->editorTabWidget->addTab(editor, name.toAscii());
-    ui->editorTabWidget->setCurrentWidget(editor);
-
-    populateAvarView(nodeRef);
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 
 void MainWindow::saveCode(LuaEditor* editor) throw(LuaError)
 {
-    DataManager::instance().setNodeSourceFromRef(editor->nodeRef(), editor->toPlainText());
-    ui->graphicsView->updateGL();
-    populateTree();
-    populateAvarView(editor->nodeRef());
+    try
+    {
+        DataManager::instance().setNodeSourceFromRef(editor->nodeRef(), editor->toPlainText());
+        ui->graphicsView->updateGL();
+        populateTree();
+        populateAvarView(editor->nodeRef());
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 void MainWindow::acceptChanges()
@@ -134,7 +152,16 @@ void MainWindow::acceptChanges()
 
 void MainWindow::doRender()
 {
-    DataManager::instance().renderRenderMan();
+    try
+    {
+        DataManager::instance().renderRenderMan();
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 void MainWindow::avarsChanged(const QModelIndex&, const QModelIndex&)
@@ -147,7 +174,16 @@ void MainWindow::startFrameChanged(int start)
     // Set the time slider range.
     ui->timeSlider->setMinimum(start);
     // Update the value stored on World in Lua
-    DataManager::instance().setStartFrame(start);
+    try
+    {
+        DataManager::instance().setStartFrame(start);
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 void MainWindow::endFrameChanged(int end)
@@ -155,7 +191,16 @@ void MainWindow::endFrameChanged(int end)
     // Update the time slider range.
     ui->timeSlider->setMaximum(end);
     // Update the value stored on World in Lua
-    DataManager::instance().setEndFrame(end);
+    try
+    {
+        DataManager::instance().setEndFrame(end);
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 
@@ -215,25 +260,34 @@ void MainWindow::populateTree(bool clear)
 
     if(!m_sceneModel)
     {
-        m_sceneModel = new SceneTreeModel(DataManager::instance().getLuaState());
+        m_sceneModel = new SceneTreeModel();
         ui->sceneTreeView->setModel(m_sceneModel);
 
         QObject::connect(m_sceneModel, SIGNAL(rowsInserted(QModelIndex, int, int)), ui->sceneTreeView, SLOT(expand(QModelIndex)));
     }
 
-    m_sceneModel->populateData(DataManager::instance().getLuaState());
+    m_sceneModel->populateData();
 
     ui->cameraCombo->clear();
 
-    QList<int> camRefs;
-    DataManager::instance().getCameraNodeRefs(camRefs);
-    int camRef;
-    foreach(camRef, camRefs)
+    try
     {
-        QString name = DataManager::instance().nodeNameFromRef(camRef);
-        QList<QVariant> cameraData;
-        cameraData << name;
-        ui->cameraCombo->addItem(name, camRef);
+        QList<int> camRefs;
+        DataManager::instance().getCameraNodeRefs(camRefs);
+        int camRef;
+        foreach(camRef, camRefs)
+        {
+            QString name = DataManager::instance().nodeNameFromRef(camRef);
+            QList<QVariant> cameraData;
+            cameraData << name;
+            ui->cameraCombo->addItem(name, camRef);
+        }
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
     }
 
     // Set the World node as expanded.

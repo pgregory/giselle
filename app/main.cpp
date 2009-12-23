@@ -1,6 +1,5 @@
 #include <QtGui/QApplication>
 #include "mainwindow.h"
-#include "glwindow.h"
 #include "datamanager.h"
 #include <QSharedPointer>
 #include <QDir>

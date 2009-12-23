@@ -6,10 +6,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-}
 #include "luaerror.h"
 
 class OpenGLWidget : public QGLWidget
@@ -21,7 +17,7 @@ public:
             :QGLWidget(parent), m_time(0)
     {}
 
-    void initialiseLua(lua_State* L);
+    void initialise();
     QSize sizeHint() const
     {
         return QSize(320,240);
@@ -57,7 +53,6 @@ protected:
     void paintGL();
 
 private:
-    lua_State* m_L;
     int        m_time;
     int        m_glRendererRef;
     QString    m_cameraName;

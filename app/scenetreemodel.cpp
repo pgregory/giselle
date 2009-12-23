@@ -1,35 +1,37 @@
 #include "scenetreemodel.h"
+#include "datamanager.h"
 #include <iostream>
 
-#include <QtCore/QStringList>
+#include <QStringList>
+#include <QMessageBox>
 
 #include "scenetreeitem.h"
 
-extern "C" {
-#include "lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
-}
-
-
-
-SceneTreeModel::SceneTreeModel(lua_State* L, QObject* parent) :
+SceneTreeModel::SceneTreeModel(QObject* parent) :
         QAbstractItemModel(parent)
 {
     QList<QVariant> rootData;
     rootData << "Scene";
-    m_rootItem = new SceneTreeItem(L, rootData, ROOT);
+    m_rootItem = new SceneTreeItem(rootData, ROOT);
 
-    // Add a world node.
-    QList<QVariant> worldData;
-    worldData << "World";
-    lua_getglobal(L, "World");
-    int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);
-    m_worldItem = new SceneTreeItem(L, worldData, WORLD, nodeRef, m_rootItem);
-    m_rootItem->appendChild(m_worldItem);
+    try
+    {
+        // Add a world node.
+        QList<QVariant> worldData;
+        worldData << "World";
+        int nodeRef = DataManager::instance().getWorldRef();
+        m_worldItem = new SceneTreeItem(worldData, WORLD, nodeRef, m_rootItem);
+        m_rootItem->appendChild(m_worldItem);
 
-    populateData(L);
+        populateData();
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 
@@ -39,55 +41,58 @@ SceneTreeModel::~SceneTreeModel()
 }
 
 
-void SceneTreeModel::processSceneTree(lua_State* L, SceneTreeItem* parent, const QModelIndex& wi)
+void SceneTreeModel::processSceneTree(int parentRef, SceneTreeItem* parent, const QModelIndex& wi)
 {
-    lua_getfield(L, -1, "children");                    // children
-    if(lua_isnil(L, -1))
+    try
     {
-        lua_pop(L, 1);
-        return;
+        QList<int> children;
+        DataManager::instance().getNodeChildrendRefsFromRef(parentRef, children);
+        int child;
+        foreach(child, children)
+        {
+            QString name = DataManager::instance().nodeNameFromRef(child);
+            QList<QVariant> modelData;
+            modelData << name;
+            SceneTreeItem* modelItem = 0;
+            int row;
+            if(!parent->contains(modelData, row))
+            {
+                beginInsertRows(wi, parent->childCount(), parent->childCount());
+                row = parent->childCount();
+                modelItem = new SceneTreeItem(modelData, MODEL, child, parent);
+                parent->appendChild(modelItem);
+                endInsertRows();
+            }
+            else
+                modelItem = parent->child(row);
+            QModelIndex ci = index(row, 0, wi);
+            processSceneTree(child, modelItem, ci);
+        }
     }
-    lua_pushnil(L); /* the first key */                 // children - nil
-    while(lua_next(L, -2) != 0)                         // children - key - value
+    catch(LuaError& e)
     {
-        /* 'key' at -2, 'value' at -1 */
-        lua_getfield(L, -1, "name");                    // children - key - value - name
-        const char* name = lua_tostring(L, -1);
-        lua_pop(L, 1);                                  // children - key - value
-        lua_pushvalue(L, -1);                           // children - key - value - value
-        QList<QVariant> modelData;
-        modelData << name;
-        SceneTreeItem* modelItem = 0;
-        int row = 0;
-        if(!parent->contains(modelData, row))
-        {
-            beginInsertRows(wi, parent->childCount(), parent->childCount());
-            row = parent->childCount();
-            int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);   // children - key - value
-            modelItem = new SceneTreeItem(L, modelData, MODEL, nodeRef, parent);
-            parent->appendChild(modelItem);
-            endInsertRows();
-        }
-        else
-        {
-            lua_pop(L, 1);                              // children - key - value
-            modelItem = parent->child(row);
-        }
-        QModelIndex ci = index(row, 0, wi);
-        processSceneTree(L, modelItem, ci);
-        lua_pop(L, 1);                                  // children - key
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
     }
-    lua_pop(L, 1);                                      // --
 }
 
 
-void SceneTreeModel::populateData(lua_State* L)
+void SceneTreeModel::populateData()
 {
     // Now fill in the models from the Lua state.
-    lua_getglobal(L, "World");                          // World
-    QModelIndex wi = index(1 , 0, QModelIndex());
-    processSceneTree(L, m_worldItem, wi);
-    lua_pop(L, 1);                                      // --
+    try
+    {
+        int worldRef = DataManager::instance().getWorldRef();
+        QModelIndex wi = index(1 , 0, QModelIndex());
+        processSceneTree(worldRef, m_worldItem, wi);
+    }
+    catch(LuaError& e)
+    {
+        QMessageBox box;
+        box.setText(e.what());
+        box.exec();
+    }
 }
 
 
