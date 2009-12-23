@@ -31,7 +31,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(lua_State *L, QWidget *parent = 0);
+    MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
 public slots:
@@ -61,7 +61,6 @@ private:
 
     Ui::MainWindow *ui;
     QSplitter* splitter;
-    lua_State* L;
     QString currentType;
     QString currentName;
     AvarListModel* m_currentAvarModel;

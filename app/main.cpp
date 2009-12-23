@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     DataManager::instance().setLuaState(L);
 
     QApplication a(argc, argv);
-    MainWindow w(L);
+    MainWindow w;
     w.show();
 
     int result = a.exec();

@@ -9,6 +9,7 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#include "luaerror.h"
 
 typedef struct _Keyframe
 {
@@ -39,6 +40,10 @@ class DataManager
     // General methods.
     int cloneRef(int ref);
     void releaseRef(int ref);
+    bool refsEqual(int refa, int refb);
+    void runCommand(const QString& command) throw(LuaError);
+    void saveData(const QString& filename) throw(LuaError);
+    void loadData(const QString& filename) throw(LuaError);
 
     // Avar related methods.
     void getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs);
@@ -47,6 +52,22 @@ class DataManager
     float getKeyframeFromRef(int keyframeRef);
     int addKeyframe(int avarRef, int index, float value);
     void deleteKeyframeFromRef(int avarRef, int keyframeRef);
+
+    // Node methods
+    QString nodeNameFromRef(int nodeRef);
+    QString nodeSourceFromRef(int nodeRef);
+    void setNodeSourceFromRef(int nodeRef, const QString& source) throw(LuaError);
+    void getNodeAvarsFromRef(int nodeRef, QList<int>& avarRefs) throw(LuaError);
+    void getCameraNodeRefs(QList<int>& refs);
+
+    // World methods
+    void setStartFrame(int frame);
+    void setEndFrame(int frame);
+    int getStartFrame();
+    int getEndFrame();
+
+    // Rendering methods
+    void renderRenderMan();
 
  private:
     DataManager()   {}

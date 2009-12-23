@@ -7,6 +7,7 @@
 #include "scenetreemodel.h"
 #include "scenetreeitem.h"
 #include "luaeditor.h"
+#include "datamanager.h"
 
 #include <QCoreApplication>
 #include <QMap>
@@ -25,8 +26,8 @@
 #include "luaerror.h"
 
 
-MainWindow::MainWindow(lua_State *L, QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), L(L), m_currentAvarModel(0), m_sceneModel(0)
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow), m_currentAvarModel(0), m_sceneModel(0)
 {
     QCoreApplication::setApplicationName("TheAnimator");
     QCoreApplication::setOrganizationName("Aqsis Team");
@@ -34,7 +35,7 @@ MainWindow::MainWindow(lua_State *L, QWidget *parent)
 
     ui->setupUi(this);
 
-    ui->graphicsView->initialiseLua(L);
+    ui->graphicsView->initialiseLua(DataManager::instance().getLuaState());
 
     splitter = new QSplitter;
     splitter = ui->splitterEditTree;
@@ -85,110 +86,34 @@ void MainWindow::selectModel(const QModelIndex &index)
     // Check if the model is already opened.
     for(int i = 0; i < ui->editorTabWidget->count(); ++i)
     {
-        try
+        if(DataManager::instance().refsEqual(nodeRef, static_cast<LuaEditor*>(ui->editorTabWidget->widget(i))->nodeRef()))
         {
-            struct C
-            {
-                int indexa, indexb;
-                bool equal;
-                static int call(lua_State* L)
-                {
-                    C* p = static_cast<C*>(lua_touserdata(L, -1));
-                    lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexa);
-                    lua_rawgeti(L, LUA_REGISTRYINDEX, p->indexb);
-                    p->equal = lua_rawequal(L, -1, -2) != 0;
-                    lua_pop(L, 2);
-                    return 0;
-                }
-            } p = { nodeRef, static_cast<LuaEditor*>(ui->editorTabWidget->widget(i))->nodeRef(), false };
-            int res = lua_cpcall(L, C::call, &p);
-            if(res != 0)
-                throw(LuaError(L));
-
-            if(p.equal)
-            {
-                ui->editorTabWidget->setCurrentIndex(i);
-                return;
-            }
-        }
-        catch(std::exception& e)
-        {
-            QMessageBox box;
-            box.setText(e.what());
-            box.exec();
+            ui->editorTabWidget->setCurrentIndex(i);
             return;
         }
     }
 
     QMap<QString, QList<QPair<float, float> > > avarsList;
 
-    struct C
-    {
-        QString source;
-        QString nodeName;
-        int     objref;
-        static int call(lua_State *L)
-        {
-            C* p = static_cast<C*>(lua_touserdata(L, 1));
-            lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
-            if(lua_isnil(L, -1))
-            {
-                lua_pushstring(L, "Error, item is nil!");
-                lua_error(L);
-            }
-            lua_getfield(L, -1, "bodySource");
-            const char* source = lua_tostring(L, -1);
-            p->source = source;
-            lua_pop(L, 1);  /* << bodySource */
-            lua_getfield(L, -1, "name");
-            const char* name = lua_tostring(L, -1);
-            p->nodeName = name;
-            lua_pop(L, 1);  /* << name */
-            return 0;
-        }
-    } p = { "", "", nodeRef };
-    int res = lua_cpcall(L, C::call, &p);
-    if(res == 0)
-    {
-        LuaEditor* editor = new LuaEditor(L);
-        editor->setNodeRef(nodeRef);
-        editor->setText(p.source);
-        ui->editorTabWidget->addTab(editor, p.nodeName.toAscii());
-        ui->editorTabWidget->setCurrentWidget(editor);
-    }
+    QString name = DataManager::instance().nodeNameFromRef(nodeRef);
+    QString source = DataManager::instance().nodeSourceFromRef(nodeRef);
+
+    LuaEditor* editor = new LuaEditor(DataManager::instance().getLuaState());
+    editor->setNodeRef(nodeRef);
+    editor->setText(source);
+    ui->editorTabWidget->addTab(editor, name.toAscii());
+    ui->editorTabWidget->setCurrentWidget(editor);
+
     populateAvarView(nodeRef);
 }
 
 
 void MainWindow::saveCode(LuaEditor* editor) throw(LuaError)
 {
-    if(editor->nodeRef() != LUA_NOREF)
-    {
-        struct C
-        {
-            QString source;
-            int objref;
-            static int call(lua_State *L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
-                lua_getfield(L, -1, "setBody"); // Get the setBody function.
-                lua_pushvalue(L, -2);   // Push self.
-                lua_pushstring(L, p->source.toAscii()); // Push new body text.
-                lua_call(L, 2, 0);
-                lua_pop(L, 1);  /* << item */
-                return 0;
-            }
-        } p = { editor->toPlainText().toAscii(), editor->nodeRef() };
-        int res = lua_cpcall(L, C::call, &p);
-        if( res != 0)
-        {
-            throw(LuaError(L));
-        }
-        ui->graphicsView->updateGL();
-        populateTree();
-        populateAvarView(editor->nodeRef());
-    }
+    DataManager::instance().setNodeSourceFromRef(editor->nodeRef(), editor->toPlainText());
+    ui->graphicsView->updateGL();
+    populateTree();
+    populateAvarView(editor->nodeRef());
 }
 
 void MainWindow::acceptChanges()
@@ -209,46 +134,7 @@ void MainWindow::acceptChanges()
 
 void MainWindow::doRender()
 {
-    try
-    {
-        struct C
-        {
-            static int call(lua_State* L)
-            {
-                //C* p = static_cast<C*>(lua_touserdata(L, 1));
-                // Create a new RenderMan renderer
-                lua_getglobal(L, "RenderMan");      // RenderMan
-                lua_getfield(L, -1, "create");      // RenderMan - create
-                lua_pushvalue(L, -2);   // self     // RenderMan - create - GLRenderer
-                lua_pushstring(L, "test");          // RenderMan - create - GLRenderer - name
-                lua_call(L, 2, 1);                  // RenderMan - newrenderer
-                lua_getfield(L, -1, "renderIt");    // RenderMan - newrenderer - renderIt
-                lua_pushvalue(L, -2); // self       // RenderMan - newrenderer - renderIt - newrenderer
-                lua_newtable(L);                    // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_getglobal(L, "World");          // RenderMan - newrenderer - renderIt - newrenderer - table - World
-                lua_setfield(L, -2, "world");       // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_getglobal(L, "Cameras");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
-                lua_getfield(L, -1, "main");        // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras - main
-                lua_setfield(L, -3, "camera");      // RenderMan - newrenderer - renderIt - newrenderer - table - Cameras
-                lua_pop(L, 1);                      // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_pushinteger(L, 320);            // RenderMan - newrenderer - renderIt - newrenderer - table - 320
-                lua_setfield(L, -2, "xres");        // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_pushinteger(L, 240);            // RenderMan - newrenderer - renderIt - newrenderer - table - 240
-                lua_setfield(L, -2, "yres");        // RenderMan - newrenderer - renderIt - newrenderer - table
-                lua_call(L, 2, 0);                  // RenderMan - newrenderer
-                lua_pop(L, 2);                      // --
-                return 0;
-            }
-        } p;
-        int res = lua_cpcall(L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(L));
-
-    }
-    catch(std::exception & e)
-    {
-        std::cerr << e.what() <<std::endl;
-    }
+    DataManager::instance().renderRenderMan();
 }
 
 void MainWindow::avarsChanged(const QModelIndex&, const QModelIndex&)
@@ -261,34 +147,7 @@ void MainWindow::startFrameChanged(int start)
     // Set the time slider range.
     ui->timeSlider->setMinimum(start);
     // Update the value stored on World in Lua
-    try
-    {
-        struct C
-        {
-            int frame;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "World");          // World
-                if(!lua_isnil(L, -1))
-                {
-                    lua_pushinteger(L, p->frame);       // World - frame
-                    lua_setfield(L, -2, "startTime");   // World
-                }
-                lua_pop(L, 1);                      // --
-                return 0;
-            }
-        } p = { start };
-        int res = lua_cpcall(L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
+    DataManager::instance().setStartFrame(start);
 }
 
 void MainWindow::endFrameChanged(int end)
@@ -296,34 +155,7 @@ void MainWindow::endFrameChanged(int end)
     // Update the time slider range.
     ui->timeSlider->setMaximum(end);
     // Update the value stored on World in Lua
-    try
-    {
-        struct C
-        {
-            int frame;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "World");          // World
-                if(!lua_isnil(L, -1))
-                {
-                    lua_pushinteger(L, p->frame);       // World - frame
-                    lua_setfield(L, -2, "endTime");     // World
-                }
-                lua_pop(L, 1);                      // --
-                return 0;
-            }
-        } p = { end };
-        int res = lua_cpcall(L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
-    }
+    DataManager::instance().setEndFrame(end);
 }
 
 
@@ -332,11 +164,7 @@ void MainWindow::runCommand()
     QString command = ui->lineEdit->text();
     try
     {
-        int res = luaL_dostring(L, command.toAscii());
-        if(res != 0)
-        {
-            throw(LuaError(L));
-        }
+        DataManager::instance().runCommand(command);
     }
     catch(std::exception& e)
     {
@@ -357,38 +185,9 @@ void MainWindow::populateAvarView(int nodeRef)
 
     try
     {
-        struct C
-        {
-            QList<int> avars;
-            int     objref;
-            static int call(lua_State *L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, 1));
-                lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
-                if(lua_isnil(L, -1))
-                {
-                    lua_pushstring(L, "Error, item is nil!");
-                    lua_error(L);
-                }
-                lua_getfield(L, -1, "avars");
-                if(!lua_isnil(L, -1))
-                {
-                    lua_pushnil(L); /* the first key */
-                    while(lua_next(L, -2) != 0)
-                    {
-                        /* 'key' at -2, 'value' at -1 */
-                        p->avars << luaL_ref(L, LUA_REGISTRYINDEX); /* << value */
-                    }
-                }
-                lua_pop(L, 1);  /* << avars  */
-                return 0;
-            }
-        } p = { QList<int>(), nodeRef };
-        int res = lua_cpcall(L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(L));
-
-        AvarListModel* model = new AvarListModel(p.avars, ui->timeMin->value(), ui->timeMax->value());
+        QList<int> avars;
+        DataManager::instance().getNodeAvarsFromRef(nodeRef, avars);
+        AvarListModel* model = new AvarListModel(avars, ui->timeMin->value(), ui->timeMax->value());
         ui->avarTableView->setModel(model);
         QObject::connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(avarsChanged(QModelIndex, QModelIndex)));
         QObject::connect(ui->timeMin, SIGNAL(valueChanged(int)), model, SLOT(startFrameChanged(int)));
@@ -416,51 +215,25 @@ void MainWindow::populateTree(bool clear)
 
     if(!m_sceneModel)
     {
-        m_sceneModel = new SceneTreeModel(L);
+        m_sceneModel = new SceneTreeModel(DataManager::instance().getLuaState());
         ui->sceneTreeView->setModel(m_sceneModel);
 
         QObject::connect(m_sceneModel, SIGNAL(rowsInserted(QModelIndex, int, int)), ui->sceneTreeView, SLOT(expand(QModelIndex)));
     }
 
-    m_sceneModel->populateData(L);
+    m_sceneModel->populateData(DataManager::instance().getLuaState());
 
     ui->cameraCombo->clear();
 
-    try
+    QList<int> camRefs;
+    DataManager::instance().getCameraNodeRefs(camRefs);
+    int camRef;
+    foreach(camRef, camRefs)
     {
-        struct C
-        {
-            QComboBox* combo;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                // Now fill in the cameras from the Lua state.
-                lua_getglobal(L, "Cameras");                         // Cameras
-                lua_pushnil(L); /* the first key */                  // Cameras - nil
-                while(lua_next(L, -2) != 0)                          // Cameras - key - value
-                {
-                    /* 'key' at -2, 'value' at -1 */
-                    lua_getfield(L, -1, "name");                     // Cameras - key - value - name
-                    const char* name = lua_tostring(L, -1);
-                    lua_pop(L, 1);                                   // Cameras - key - value
-                    QList<QVariant> cameraData;
-                    cameraData << name;
-                    int nodeRef = luaL_ref(L, LUA_REGISTRYINDEX);    // Cameras - key
-                    p->combo->addItem(name, nodeRef);
-                }
-                lua_pop(L, 1);                              // --
-                return 0;
-            }
-        } p = { ui->cameraCombo };
-        int res = lua_cpcall(L, C::call, &p);
-        if(res != 0)
-            throw(LuaError(L));
-    }
-    catch(std::exception& e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText(e.what());
-        msgBox.exec();
+        QString name = DataManager::instance().nodeNameFromRef(camRef);
+        QList<QVariant> cameraData;
+        cameraData << name;
+        ui->cameraCombo->addItem(name, camRef);
     }
 
     // Set the World node as expanded.
@@ -472,24 +245,7 @@ void MainWindow::save()
     QString name = QFileDialog::getSaveFileName(this, "Save File", "", "Animator Files(*.ta)");
     try
     {
-        struct C
-        {
-            QString name;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "saveAll");        // saveAll
-                lua_pushstring(L, p->name.toAscii());// saveAll - name
-                lua_call(L, 1, 0);                  // --
-
-                return 0;
-            }
-        } p = { name };
-        int res = lua_cpcall(L, C::call, &p);
-        if(res != 0)
-        {
-            throw(LuaError(L));
-        }
+        DataManager::instance().saveData(name);
     }
     catch(std::exception& e)
     {
@@ -505,34 +261,9 @@ void MainWindow::load()
     QString name = QFileDialog::getOpenFileName(this, "Load File", "", "Animator Files(*.ta)");
     try
     {
-        struct C
-        {
-            QString name;
-            int     startframe;
-            int     endframe;
-            static int call(lua_State* L)
-            {
-                C* p = static_cast<C*>(lua_touserdata(L, -1));
-                lua_getglobal(L, "loadAll");        // loadAll
-                lua_pushstring(L, p->name.toAscii());// loadAll - name
-                lua_call(L, 1, 0);                  // table - result
-                lua_getglobal(L, "World");          // World
-                lua_getfield(L, -1, "startTime");   // World - startTime
-                lua_getfield(L, -2, "endTime");     // World - startTime - endTime
-                p->startframe = lua_tointeger(L, -2);
-                p->endframe = lua_tointeger(L, -1);
-                lua_pop(L, 3);                      // --
-
-                return 0;
-            }
-        } p = { name, 0, 0 };
-        int res = lua_cpcall(L, C::call, &p);
-        if(res != 0)
-        {
-            throw(LuaError(L));
-        }
-        ui->timeMin->setValue(p.startframe);
-        ui->timeMax->setValue(p.endframe);
+        DataManager::instance().loadData(name);
+        ui->timeMin->setValue(DataManager::instance().getStartFrame());
+        ui->timeMax->setValue(DataManager::instance().getEndFrame());
     }
     catch(std::exception& e)
     {
