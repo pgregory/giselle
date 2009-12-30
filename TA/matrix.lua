@@ -681,6 +681,31 @@ function matrix.random( mtx,start,stop,idp )
 	return mtx
 end
 
+function matrix.rotationFromAxisAngle( angle, x, y, z)
+	local mtx = matrix(4, "I")
+	local c = math.cos(math.rad(angle))
+	local s = math.sin(math.rad(angle))
+	local l = math.sqrt(x*x+y*y+z*z)
+	local ux = x / l
+	local uy = y / l
+	local uz = z / l
+	local ux2 = ux*ux
+	local uy2 = uy*uy
+	local uz2 = uz*uz
+	mtx[1][1] = ux2+(1.0-ux2)*c
+	mtx[2][1] = ux*uy*(1.0-c)-uz*s
+	mtx[3][1] = ux*uz*(1.0-c)+uy*s
+	mtx[1][2] = ux*uy*(1.0-c)+uz*s
+	mtx[2][2] = uy2+(1.0-uy2)*c
+	mtx[3][2] = uy*uz*(1.0-c)-ux*s
+	mtx[1][3] = ux*uz*(1.0-c)-uy*s
+	mtx[2][3] = uy*uz*(1.0-c)+ux*s
+	mtx[3][3] = uz2+(1.0-uz2)*c
+
+	return mtx;
+end
+
+
 
 --//////////////////////////////
 --// Object Utility Functions //

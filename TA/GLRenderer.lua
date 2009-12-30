@@ -186,6 +186,11 @@ function GLRenderer:create(name)
 
 	function r:start(options)
 		gl.Clear('COLOR_BUFFER_BIT,DEPTH_BUFFER_BIT') -- Clear Screen And Depth Buffer
+		gl.Enable('LIGHTING')
+		gl.Light('LIGHT1', 'AMBIENT', {0.1, 0.1, 0.1, 1})
+		gl.Light('LIGHT1', 'DIFFUSE', {1, 1, 1, 1})
+		gl.Light('LIGHT1', 'POSITION', {15, 18, 3, 1})
+		gl.Enable('LIGHT1')
 		gl.MatrixMode('PROJECTION')   -- Select The Projection Matrix
 		gl.LoadIdentity()             -- Reset The Projection Matrix
 	end

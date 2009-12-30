@@ -77,6 +77,23 @@ function Model:camera(name)
     return o
 end
 
+function Model:find(locator)
+	local node = self
+	-- If the locator begins with '/' then search from the world root.
+	if string.find(locator, '$/') then
+		locator = string.sub(locator, 2)
+		node = World
+	end
+	for n in string.gmatch(locator, "(%w+)/?") do
+		if node.children[n] then
+			node = node.children[n]
+		else
+			error("Invalid locator ("..locator..") node "..node.name.." doesn't have a child named "..n)
+		end
+	end
+	return node	
+end
+
 
 --[[
 Static utility functions
