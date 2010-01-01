@@ -46,6 +46,7 @@ function Model:model(name)
 	o:setBody("TransformBegin()\nTransformEnd()")
 	o.passes = { true, true, true }
 	o.children = {}
+	o.parent = self
 	o.nodeType = "model"
     function o:__call()
         self:create()
@@ -69,6 +70,7 @@ function Model:camera(name)
     o:setBody("Projection(\"perspective\", {fov = 45})")
 	o.passes = { true, true, false }
 	o.nodeType = "camera"
+	o.parent = self
     function o:__call()
         self:create()
     end
@@ -77,12 +79,30 @@ function Model:camera(name)
     return o
 end
 
-function Model:find(locator)
-	local node = self
+function Model:location()
+	local l = ""
+	if self.parent then
+		l = self.parent:location()
+	end
+	return l .. "/" .. self.name
+end
+
+function Model.find(...)
+	local node
+	local locator
+	if select('#', ...) == 1 then
+		node = root
+		locator = ... 
+	elseif select('#', ...) == 2 then
+		node = ...
+		locator = select(1, ...)
+	else
+		error("Invalid arguments to find")
+	end
 	-- If the locator begins with '/' then search from the world root.
-	if string.find(locator, '$/') then
+	if string.find(locator, '/') == 1 then
 		locator = string.sub(locator, 2)
-		node = World
+		node = root
 	end
 	for n in string.gmatch(locator, "(%w+)/?") do
 		if node.children[n] then

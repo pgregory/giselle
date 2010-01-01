@@ -1,6 +1,7 @@
 function fixupScene(model)
 	if model.children then
 		for k,v in pairs(model.children) do
+			v.parent = model
 			if v.nodeType == "model" then
 				v = Model:clone(v)
 			elseif v.nodeType == "camera" then
@@ -37,6 +38,10 @@ function loadAll(name)
 		fixupScene(m.World)
 		Cameras = m.Cameras
 		World = m.World
+		-- Root can only have one world, even if it's differntly named, so clear the root
+		-- children.
+		root.children = {}
+		root.children[World.name] = World
 	else
 		error("This doesn't appear to be a valid system save")
 	end

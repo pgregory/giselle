@@ -1,10 +1,15 @@
+root = {}
+root.children = {}
+root.name = "root"
+
 World = Model:clone()
 World.time = 0
 World.startTime = 0
 World.endTime = 50
 World.children = {}
-World.name = "World"
+World.name = "world"
 World.passes = { true, false, true }
+root.children[World.name] = World
 
 function World:generate(time)
 	Renderable:pushState()
