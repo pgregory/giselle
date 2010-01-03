@@ -1,3 +1,48 @@
+function partialSphere(radius, thetamin, thetamax, zmin, zmax)
+	local precision = 12
+	local phimin = -90
+	local phimax = 90
+	if zmin > -radius then
+		phimin = math.asin(zmin/radius)
+	end
+	if zmax < radius then
+		phimax = math.asin(zmax/radius)
+	end
+	local phi1 = math.rad(math.max(phimin, -90))
+	local phi2 = math.rad(math.min(phimax, 90))
+	local theta1 = math.rad(math.max(thetamin, 0)) 
+	local theta2 = math.rad(math.min(thetamax, 360))
+	for j = 0, (precision/2)-1 do
+		local t1 = phi1 + j * (phi2 - phi1) / (precision/2)
+		local t2 = phi1 + (j + 1) * (phi2 - phi1) / (precision/2)
+		gl.Begin('QUAD_STRIP')
+		for i = 0, precision do
+			local t3 = theta1 + i * (theta2 - theta1) / precision
+
+			local ex = math.cos(t1) * math.cos(t3)
+			local ey = math.cos(t1) * math.sin(t3)
+			local ez = math.sin(t1)
+			local px = radius * ex
+			local py = radius * ey
+			local pz = radius * ez
+			gl.Normal(ex, ey, ez)
+			gl.TexCoord(i/precision, 2*j/precision)
+			gl.Vertex(px, py, pz)
+
+			ex = math.cos(t2) * math.cos(t3)
+			ey = math.cos(t2) * math.sin(t3)
+			ez = math.sin(t2)
+			px = radius * ex
+			py = radius * ey
+			pz = radius * ez
+			gl.Normal(ex, ey, ez)
+			gl.TexCoord(i/precision, 2*(j+1)/precision)
+			gl.Vertex(px, py, pz)
+		end
+		gl.End()
+	end
+end
+
 GLRenderer = Object:clone()
 GLRenderer.mode = 'LINES'
 
@@ -99,13 +144,14 @@ function GLRenderer:create(name)
 		gl.PopMatrix()
 	end
 	function tab:Sphere(framestate, pass)
-		local quad = glu.NewQuadric()
-        if GLRenderer.mode == 'LINES' then
-            glu.QuadricDrawStyle(quad, 'LINE')
-        else
-            glu.QuadricDrawStyle(quad, 'SOLID')
-        end
-        glu.Sphere(quad, self.radius, 12, 6)
+--		local quad = glu.NewQuadric()
+--        if GLRenderer.mode == 'LINES' then
+--            glu.QuadricDrawStyle(quad, 'LINE')
+--        else
+--            glu.QuadricDrawStyle(quad, 'SOLID')
+--        end
+--        glu.Sphere(quad, self.radius, 12, 6)
+		partialSphere(self.radius, 0, self.thetamax, self.zmin, self.zmax)
 	end
 	function tab:Disk(framestate, pass)
 		local quad = glu.NewQuadric()
