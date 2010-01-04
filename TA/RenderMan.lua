@@ -37,6 +37,11 @@ function RenderMan:create(name)
 		if pass < 2 then return end
 		ri.Rotate(self.angle, self.x, self.y, self.z)
 	end
+	function tab:ConcatTransform(framestate, pass)
+		Renderer.concatTransform(r, self.matrix)
+		if pass < 2 then return end
+		ri.ConcatTransform(matrix.transpose(self.matrix))
+	end
 	function tab:Cylinder(framestate, pass)
 		ri.Cylinder(self.radius, self.zmin, self.zmax, self.thetamax)
 	end
@@ -50,6 +55,7 @@ function RenderMan:create(name)
 		ri.PatchMesh(self.type, self.nu, self.uwrap, self.nv, self.vwrap, self.paramList)
 	end
 	function tab:Projection(framestate, pass)
+		if pass ~= 2 then return end
 		ri.Projection(self.type, self.paramList)
 	end
 	function tab:Polygon(framestate, pass)
@@ -63,6 +69,14 @@ function RenderMan:create(name)
 	end
 	function tab:LightSource(framestate, pass)
 		ri.LightSource(self.shadername, self.paramList)
+	end
+	function tab:CameraTransform(framestate, pass)
+		-- Only record the camera transform during pass 1, it
+		-- will be 'used' during subsequent passes.
+		if pass > 1 then return end
+		local mat = r.matrixStack[#r.matrixStack]
+		mat = matrix.invert(mat)
+		framestate["cameraTransforms"][self.camera.name] = mat
 	end
 	function tab:RecordTransform(framestate, pass)
 		framestate["transforms"][self.name] = r.matrixStack[#r.matrixStack]
