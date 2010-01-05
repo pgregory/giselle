@@ -44,6 +44,62 @@ function partialSphere(radius, thetamin, thetamax, zmin, zmax)
 	end
 end
 
+function partialCylinder(radius, thetamin, thetamax, zmin, zmax)
+	local thetan = math.ceil(math.max(3, ((thetamax - thetamin)/360) * 18))
+	local theta1 = math.rad(math.max(thetamin, 0)) 
+	local theta2 = math.rad(math.min(thetamax, 360))
+	gl.Begin('QUAD_STRIP')
+	for i = 0, thetan do
+		local t1 = theta1 + i * (theta2 - theta1) / thetan
+
+		local ex = math.cos(t1)
+		local ey = math.sin(t1)
+		local ez = 0
+		local px = radius * ex
+		local py = radius * ey
+		local pz = zmin
+		gl.Normal(ex, ey, ez)
+		gl.TexCoord(i/thetan, 0)
+		gl.Vertex(px, py, pz)
+
+		pz = zmax
+		gl.Normal(ex, ey, ez)
+		gl.TexCoord(i/thetan, 1)
+		gl.Vertex(px, py, pz)
+	end
+	gl.End()
+end
+
+
+function partialDisk(radius, thetamin, thetamax, height)
+	local thetan = math.ceil(math.max(3, ((thetamax - thetamin)/360) * 18))
+	local theta1 = math.rad(math.max(thetamin, 0)) 
+	local theta2 = math.rad(math.min(thetamax, 360))
+	for j = 0, 8 do -- Default to 8 rings (9 rows of vertices) for now.
+		local t1 = j / 9
+		local t2 = (j + 1) / 9
+		gl.Begin('QUAD_STRIP')
+		for i = 0, thetan do
+			local t3 = theta1 + i * (theta2 - theta1) / thetan
+
+			local px = radius * (1-t1) * math.cos(t3)
+			local py = radius * (1-t1) * math.sin(t3)
+			local pz = height
+			gl.Normal(0, 0, 1)
+			gl.TexCoord(i/thetan, t1)
+			gl.Vertex(px, py, pz)
+
+			px = radius * (1-t2) * math.cos(t3) 
+			py = radius * (1-t2) * math.sin(t3)
+			pz = height
+			gl.Normal(0, 0, 1)
+			gl.TexCoord(i/thetan, t2)
+			gl.Vertex(px, py, pz)
+		end
+		gl.End()
+	end
+end
+
 GLRenderer = Object:clone()
 GLRenderer.mode = 'LINES'
 
@@ -133,28 +189,20 @@ function GLRenderer:create(name)
 		gl.MultMatrix(self.matrix)
 	end
 	function tab:Cylinder(framestate, pass)
-        local quad = glu.NewQuadric()
-        if GLRenderer.mode == 'LINES' then
-            glu.QuadricDrawStyle(quad, 'LINE')
-        else
-            glu.QuadricDrawStyle(quad, 'SOLID')
-        end
-        gl.PushMatrix()
-		gl.Translate(0, 0, self.zmin)
-		glu.Cylinder(quad, self.radius, self.radius, self.zmax-self.zmin, 12, 1)
-		gl.PopMatrix()
+		partialCylinder(self.radius, 0, self.thetamax, self.zmin, self.zmax)
 	end
 	function tab:Sphere(framestate, pass)
 		partialSphere(self.radius, 0, self.thetamax, self.zmin, self.zmax)
 	end
 	function tab:Disk(framestate, pass)
-		local quad = glu.NewQuadric()
-        if GLRenderer.mode == 'LINES' then
-            glu.QuadricDrawStyle(quad, 'LINE')
-        else
-            glu.QuadricDrawStyle(quad, 'SOLID')
-        end
-        glu.Disk(quad, 0, self.radius, 12, 1)
+--		local quad = glu.NewQuadric()
+--        if GLRenderer.mode == 'LINES' then
+--            glu.QuadricDrawStyle(quad, 'LINE')
+--        else
+--            glu.QuadricDrawStyle(quad, 'SOLID')
+--        end
+--        glu.Disk(quad, 0, self.radius, 12, 1)
+		partialDisk(self.radius, 0, self.thetamax, self.height)
 	end
 	function tab:PatchMesh(framestate, pass)
 		gl.Begin('TRIANGLES')         -- Drawing Using Triangles
@@ -224,7 +272,7 @@ function GLRenderer:create(name)
 
 	function r:start(options)
 		gl.Clear('COLOR_BUFFER_BIT,DEPTH_BUFFER_BIT') -- Clear Screen And Depth Buffer
-		gl.Enable('LIGHTING')
+--		gl.Enable('LIGHTING')
 		gl.Light('LIGHT1', 'AMBIENT', {0.1, 0.1, 0.1, 1})
 		gl.Light('LIGHT1', 'DIFFUSE', {1, 1, 1, 1})
 		gl.Light('LIGHT1', 'POSITION', {1, 1, 0, 0})
