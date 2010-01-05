@@ -70,6 +70,9 @@ function RenderMan:create(name)
 	function tab:LightSource(framestate, pass)
 		ri.LightSource(self.shadername, self.paramList)
 	end
+	function tab:Surface(framestate, pass)
+		ri.Surface(self.shadername, self.paramList)
+	end
 	function tab:CameraTransform(framestate, pass)
 		-- Only record the camera transform during pass 1, it
 		-- will be 'used' during subsequent passes.

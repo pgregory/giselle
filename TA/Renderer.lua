@@ -242,6 +242,9 @@ function Renderer:create(name)
 	function tab:LightSource(framestate, pass)
 		print("LightSource "..self.shadername)
 	end
+	function tab:Surface(framestate, pass)
+		print("Surface "..self.shadername)
+	end
 	function tab:CameraTransform(framestate, pass)
 		print("CameraTransform "..self.camera.name)
 	end

@@ -358,6 +358,19 @@ function LightSource:isEqual(other)
 	-- TODO: Need to work out how to compare the paramlist.
 end
 
+Surface = Renderable:clone()
+Surface.renderop = "Surface"
+Surface.shadername = ""
+function Surface:__call(shadername, paramList)
+	local o = self:create()
+	o.shadername = shadername
+	o.paramList = paramList or {} 
+	return o
+end
+function Surface:isEqual(other)
+	return self.shadername == other.shadername
+	-- TODO: Need to work out how to compare the paramlist.
+end
 
 CameraTransform = Renderable:clone()
 CameraTransform.renderop = "CameraTransform"
