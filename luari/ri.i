@@ -117,21 +117,18 @@ void processParameterList(lua_State* L, int input, RtInt count, RtToken* tokens,
 	$1 = 0;
 	$2 = NULL;
 	$2 = NULL;
-	if (!lua_istable(L,$input)) 
+    if (!lua_istable(L,$input))
 	{
 		lua_pushstring(L,"expected a table");
 		return 0;
 	}
 	$1=SWIG_table_size(L,$input);
-	if ($1<1)
+    if ($1>=1)
 	{
-		lua_pushstring(L,"table appears to be empty");
-		return 0;
-	}
-
-	$2=SWIG_ALLOC_ARRAY(RtToken,$1);
-	$3=SWIG_ALLOC_ARRAY(RtPointer,$1);
+        $2=SWIG_ALLOC_ARRAY(RtToken,$1);
+        $3=SWIG_ALLOC_ARRAY(RtPointer,$1);
         processParameterList(L, $input, $1, $2, $3);
+    }
 %}
 %typemap(default) (RtInt count, RtToken tokens[], RtPointer values[])
 %{	
