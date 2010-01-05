@@ -1,23 +1,24 @@
 function partialSphere(radius, thetamin, thetamax, zmin, zmax)
-	local precision = 12
+	local thetan = math.ceil(math.max(3, ((thetamax - thetamin)/360) * 18))
 	local phimin = -90
 	local phimax = 90
 	if zmin > -radius then
-		phimin = math.asin(zmin/radius)
+		phimin = math.deg(math.asin(zmin/radius))
 	end
 	if zmax < radius then
-		phimax = math.asin(zmax/radius)
+		phimax = math.deg(math.asin(zmax/radius))
 	end
+	local phin = math.ceil(math.max(3, ((phimax - phimin)/180) * 18))
 	local phi1 = math.rad(math.max(phimin, -90))
 	local phi2 = math.rad(math.min(phimax, 90))
 	local theta1 = math.rad(math.max(thetamin, 0)) 
 	local theta2 = math.rad(math.min(thetamax, 360))
-	for j = 0, (precision/2)-1 do
-		local t1 = phi1 + j * (phi2 - phi1) / (precision/2)
-		local t2 = phi1 + (j + 1) * (phi2 - phi1) / (precision/2)
+	for j = 0, phin-1 do
+		local t1 = phi1 + j * (phi2 - phi1) / phin
+		local t2 = phi1 + (j + 1) * (phi2 - phi1) / phin
 		gl.Begin('QUAD_STRIP')
-		for i = 0, precision do
-			local t3 = theta1 + i * (theta2 - theta1) / precision
+		for i = 0, thetan do
+			local t3 = theta1 + i * (theta2 - theta1) / thetan
 
 			local ex = math.cos(t1) * math.cos(t3)
 			local ey = math.cos(t1) * math.sin(t3)
@@ -26,7 +27,7 @@ function partialSphere(radius, thetamin, thetamax, zmin, zmax)
 			local py = radius * ey
 			local pz = radius * ez
 			gl.Normal(ex, ey, ez)
-			gl.TexCoord(i/precision, 2*j/precision)
+			gl.TexCoord(i/thetan, j/phin)
 			gl.Vertex(px, py, pz)
 
 			ex = math.cos(t2) * math.cos(t3)
@@ -36,7 +37,7 @@ function partialSphere(radius, thetamin, thetamax, zmin, zmax)
 			py = radius * ey
 			pz = radius * ez
 			gl.Normal(ex, ey, ez)
-			gl.TexCoord(i/precision, 2*(j+1)/precision)
+			gl.TexCoord(i/thetan, (j+1)/phin)
 			gl.Vertex(px, py, pz)
 		end
 		gl.End()
@@ -144,13 +145,6 @@ function GLRenderer:create(name)
 		gl.PopMatrix()
 	end
 	function tab:Sphere(framestate, pass)
---		local quad = glu.NewQuadric()
---        if GLRenderer.mode == 'LINES' then
---            glu.QuadricDrawStyle(quad, 'LINE')
---        else
---            glu.QuadricDrawStyle(quad, 'SOLID')
---        end
---        glu.Sphere(quad, self.radius, 12, 6)
 		partialSphere(self.radius, 0, self.thetamax, self.zmin, self.zmax)
 	end
 	function tab:Disk(framestate, pass)
@@ -170,11 +164,7 @@ function GLRenderer:create(name)
 		gl.End()                      -- Done Drawing A Triangle
 	end
 	function tab:Polygon(framestate, pass)
-        if GLRenderer.mode == 'LINES' then
-            gl.Begin('LINE_LOOP')
-        else
-            gl.Begin('POLYGON')
-        end
+		gl.Begin('POLYGON')
 		if self.paramList["P"] then
 			for i=1, #self.paramList["P"], 3 do
 				gl.Vertex(self.paramList["P"][i], self.paramList["P"][i+1], self.paramList["P"][i+2])
@@ -212,6 +202,8 @@ function GLRenderer:create(name)
 		gl.PopMatrix()
 		gl.PopAttrib('CURRENT_BIT')
 	end
+	function tab:Surface(framestate, pass)
+	end
 	function tab:CameraTransform(framestate, pass)
 		-- Only record the camera transform during pass 1, it
 		-- will be 'used' during subsequent passes.
@@ -235,8 +227,10 @@ function GLRenderer:create(name)
 		gl.Enable('LIGHTING')
 		gl.Light('LIGHT1', 'AMBIENT', {0.1, 0.1, 0.1, 1})
 		gl.Light('LIGHT1', 'DIFFUSE', {1, 1, 1, 1})
-		gl.Light('LIGHT1', 'POSITION', {15, 18, 3, 1})
+		gl.Light('LIGHT1', 'POSITION', {1, 1, 0, 0})
+		gl.Light('LIGHT1', 'SPOT_DIRECTION', {0, 0, 1})
 		gl.Enable('LIGHT1')
+		gl.PolygonMode('FRONT_AND_BACK', 'LINE')
 		gl.MatrixMode('PROJECTION')   -- Select The Projection Matrix
 		gl.LoadIdentity()             -- Reset The Projection Matrix
 	end
