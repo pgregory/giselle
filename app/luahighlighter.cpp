@@ -115,7 +115,8 @@ LuaHighlighter::LuaHighlighter(QTextDocument *parent)
                        << "Polygon"
                        << "Projection"
                        << "CoordinateSystem" << "CoordSysTransform"
-                       << "RecordTransform" << "RestoreTransform";
+                       << "RecordTransform" << "RestoreTransform"
+                       << "LightSource" << "Surface";
 
     foreach (const QString &pattern, renderablePatterns)
     {
