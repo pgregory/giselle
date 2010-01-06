@@ -8,6 +8,7 @@ function fixupScene(model)
 				v = Camera:clone(v)
 			end
 			for k,v in pairs(v.avars) do
+				v.model = model
 				setmetatable(v, Avar)
 			end
 			fixupScene(v)
@@ -38,6 +39,7 @@ function loadAll(name)
 		fixupScene(m.World)
 		Cameras = m.Cameras
 		World = m.World
+		ExposureSheet = m.ExposureSheet
 		-- Root can only have one world, even if it's differntly named, so clear the root
 		-- children.
 		root.children = {}
@@ -53,5 +55,6 @@ function saveAll(name)
 	m.Models = Models
 	m.Cameras = Cameras
 	m.World = World
+	m.ExposureSheet = ExposureSheet
 	table.save(m, name)
 end

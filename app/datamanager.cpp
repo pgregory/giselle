@@ -208,24 +208,39 @@ void DataManager::getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs) throw(L
         static int call(lua_State* L)
         {
             C* p = static_cast<C*>(lua_touserdata(L, 1));
-            lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarRef);
-            lua_getfield(L, -1, "name");
+            lua_rawgeti(L, LUA_REGISTRYINDEX, p->avarRef);  // avar
+            lua_getfield(L, -1, "name");                    // avar - name
             p->name = lua_tostring(L, -1);
-            lua_pop(L, 1);  /* << name */
-            lua_getfield(L, -1, "keyframes");
-            lua_pushnil(L); /* the first key */
-            while(lua_next(L, -2) != 0)
+            lua_pop(L, 1);  /* << name */                   // avar
+
+            lua_getglobal(L, "ExposureSheet");              // avar - ExposureSheet
+            lua_getfield(L, -2, "locator");                 // avar - ExposureSheet - locator()
+            lua_pushvalue(L, -3);   // self                 // avar - ExposureSheet - locator() - avar
+            lua_call(L, 1, 1);                              // avar - ExposureSheet - locator
+            QString locator = lua_tostring(L, -1);
+            lua_pop(L, 1);                                  // avar - ExposureSheet
+            lua_getfield(L, -1, "avars");                   // avar - ExposureSheet - avars
+            lua_getfield(L, -1, locator.toAscii());         // avar - ExposureSheet - avars - avar
+
+            if(lua_isnil(L, -1))
+            {
+                lua_pop(L, 4);
+                return 0;
+            }
+
+            lua_pushnil(L); /* the first key */             // avar - ExposureSheet - avars - avar - nil
+            while(lua_next(L, -2) != 0)                     // avar - ExposureSheet - avars - avar - index - kf
             {
                 lua_getfield(L, -1, "frame");
                 int frame = lua_tointeger(L, -1);
                 lua_getfield(L, -2, "value");
                 float value = lua_tonumber(L, -1);
                 lua_pop(L, 2); // << value << frame
-                int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+                int ref = luaL_ref(L, LUA_REGISTRYINDEX);   // avar - ExposureSheet - avars - avar - index
                 Keyframe kf = { ref, frame, value };
                 p->keyframes << kf;
             }
-            lua_pop(L, 2); /* << keyframes << ref */
+            lua_pop(L, 4);                                  // --
             return 0;
         }
     } p = { avarRef, kfs, "" };
@@ -586,6 +601,11 @@ void DataManager::renderRenderMan() throw(LuaError)
             lua_setfield(L, -2, "yres");        // RenderMan - newrenderer - renderIt - newrenderer - table
             lua_call(L, 2, 0);                  // RenderMan - newrenderer
             lua_pop(L, 2);                      // --
+            lua_getglobal(L, "ExposureSheet");  // ExposureSheet
+            lua_getfield(L, -1, "printSheet");  // ExposureSheet - printSheet
+            lua_pushvalue(L, -2); // self       // ExposureSheet - printSheet - ExposureSheet
+            lua_call(L, 1, 0);                  // ExposureSheet - printSheet
+            lua_pop(L, 2);
             return 0;
         }
     } p;

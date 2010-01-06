@@ -15,53 +15,44 @@ end
 Avar.__index = Avar
 
 function Avar:lininterp(time)
-    if #self.keyframes == 0 then
+	local keyframes = ExposureSheet.avars[self:locator()]
+    if keyframes == nil or #keyframes == 0 then
         return 0
     end
-    if time <= self.keyframes[1].frame then
-		return self.keyframes[1].value
-    elseif time >= self.keyframes[table.maxn(self.keyframes)].frame then
-		return self.keyframes[table.maxn(self.keyframes)].value
+    if time <= keyframes[1].frame then
+		return keyframes[1].value
+    elseif time >= keyframes[table.maxn(keyframes)].frame then
+		return keyframes[table.maxn(keyframes)].value
 	else
 		-- Calculate the correct point in the sequence of keyframes
 		local span = 1
-        while self.keyframes[span].frame <= time and span <= table.maxn(self.keyframes) do span = span+1 end
+        while keyframes[span].frame <= time and span <= table.maxn(keyframes) do span = span+1 end
 		-- Now calculate the point within the span
-        if time == self.keyframes[span-1].frame then return self.keyframes[span-1].value end
-        if time == self.keyframes[span].frame then return self.keyframes[span].value end
-        local r = (time - self.keyframes[span-1].frame)/(self.keyframes[span].frame - self.keyframes[span-1].frame)
-		local v = self.keyframes[span-1].value + (self.keyframes[span].value - self.keyframes[span-1].value) * r
+        if time == keyframes[span-1].frame then return keyframes[span-1].value end
+        if time == keyframes[span].frame then return keyframes[span].value end
+        local r = (time - keyframes[span-1].frame)/(keyframes[span].frame - keyframes[span-1].frame)
+		local v = keyframes[span-1].value + (keyframes[span].value - keyframes[span-1].value) * r
 		return v
 	end
 end
 
+function Avar:locator()
+	return self.model:locator()..":"..self.name
+end
+
 function Avar:addKeyframe(frame, value)
-    kf = KeyFrame:create(frame, value)
-    table.insert(self.keyframes, kf)
-    table.sort(self.keyframes, function(a,b) return a.frame < b.frame end)
-    return kf
+	return ExposureSheet:addKeyframe(self:locator(), frame, value)
 end
 
 
 function Avar:removeKeyframe(kf)
-    for i,v in ipairs(self.keyframes) do
-        if rawequal(v, kf) then
-            table.remove(self.keyframes, i)
-            return
-        end
-    end
+	ExposureSheet:removeKeyframe(self:locator(), kf.frame) 
 end
 
-function Avar:create(name, keyframes)
+function Avar:create(name, model)
 	local o = {}
-	o.keyframes = {}
-	if #keyframes > 0 then
-		table.sort(keyframes, function(a,b) return a[1] < b[1] end)
-		for i,v in ipairs(keyframes) do
-			o.keyframes[i] = KeyFrame:create(v[1], v[2])
-		end
-	end
 	o.name = name
+	o.model = model
 	setmetatable(o, Avar)
 	return o
 end

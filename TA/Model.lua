@@ -20,8 +20,8 @@ function Model:getRenderables(atTime)
 	return renderables
 end
 
-function Model:avar(name, keyframes)
-    local o = self.avars[name] or Avar:create(name, keyframes or {})
+function Model:avar(name)
+    local o = self.avars[name] or Avar:create(name, self)
     self.avars[name] = o
     return o
 end
@@ -79,10 +79,10 @@ function Model:camera(name)
     return o
 end
 
-function Model:location()
+function Model:locator()
 	local l = ""
 	if self.parent then
-		l = self.parent:location()
+		l = self.parent:locator()
 	end
 	return l .. "/" .. self.name
 end
