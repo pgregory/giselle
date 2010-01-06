@@ -17,7 +17,7 @@ Avar.__index = Avar
 function Avar:lininterp(time)
 	local keyframes = ExposureSheet.avars[self:locator()]
     if keyframes == nil or #keyframes == 0 then
-        return 0
+        return self.default 
     end
     if time <= keyframes[1].frame then
 		return keyframes[1].value
@@ -49,10 +49,14 @@ function Avar:removeKeyframe(kf)
 	ExposureSheet:removeKeyframe(self:locator(), kf.frame) 
 end
 
-function Avar:create(name, model)
+function Avar:create(name, model, opts)
 	local o = {}
 	o.name = name
 	o.model = model
+	o.default = 0
+	if type(opts) == 'table' then
+		o.default = opts['default'] or 0
+	end
 	setmetatable(o, Avar)
 	return o
 end

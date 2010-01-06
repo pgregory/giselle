@@ -20,8 +20,8 @@ function Model:getRenderables(atTime)
 	return renderables
 end
 
-function Model:avar(name)
-    local o = self.avars[name] or Avar:create(name, self)
+function Model:avar(name, opts)
+    local o = self.avars[name] or Avar:create(name, self, opts)
     self.avars[name] = o
     return o
 end
