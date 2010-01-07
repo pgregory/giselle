@@ -6,25 +6,15 @@ TARGET = app
 TEMPLATE = app
 INCLUDEPATH = ../lua
 INCLUDEPATH += ../luagl
-win32 { 
-    debug:LIBS += -L../lua/debug \
-        -llua \
-        -L../luagl/debug \
-        -lluagl \
-        -L../luari/debug \
-        -lluari
-    release:LIBS += -L../lua/release \
-        -llua \
-        -L../luagl/release \
-        -lluagl \
-        -L../luari/release \
-        -lluari
-}
-!win32:LIBS += -L../lua \
-    -llua \
-    -L../luagl \
+debug:DESTDIR = ../build/debug
+release:DESTDIR = ../build/release
+debug:LIBS += -L../build/debug \
+    -llua5 \
     -lluagl \
-    -L../luari \
+    -lluari
+release:LIBS += -L../build/release \
+    -llua5 \
+    -lluagl \
     -lluari
 SOURCES += main.cpp \
     mainwindow.cpp \

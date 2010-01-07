@@ -10,16 +10,15 @@ QT       += opengl
 TARGET = luagl
 TEMPLATE = lib
 INCLUDEPATH = ../lua
+debug:DESTDIR = ../build/debug
+release:DESTDIR = ../build/release
 
 DEFINES += LUAGL_LIBRARY
-win32 {
-    debug:LIBS += -L../lua/debug \
-        -llua
-    release:LIBS += -L../lua/release \
-        -llua
-}
-!win32:LIBS += -L../lua \
-    -llua
+debug:LIBS += -L../build/debug \
+        -llua5
+release:LIBS += -L../build/release \
+        -llua5
+
 SOURCES += luagl.cpp \
            luaglu.cpp \
            luagl_util.cpp

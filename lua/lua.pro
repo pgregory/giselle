@@ -5,7 +5,8 @@ QT -= core \
     gui
 TARGET = lua
 TEMPLATE = lib
-CONFIG += create_prl
+debug:DESTDIR = ../build/debug
+release:DESTDIR = ../build/release
 VERSION = 5.1.4
 DEFINES += LUA_LIBRARY
 SOURCES += lzio.cpp \

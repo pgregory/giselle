@@ -8,19 +8,16 @@ TEMPLATE = lib
 DEFINES += LUARI_LIBRARY
 INCLUDEPATH = ../lua
 
+debug:DESTDIR = ../build/debug
+release:DESTDIR = ../build/release
+
 DEFINES += LUAGL_LIBRARY
-win32 {
-    debug:LIBS += -L../lua/debug \
-        -llua \
-        -L${AQSISHOME}/lib \
-        -laqsis_ri2rib
-    release:LIBS += -L../lua/release \
-        -llua \
-        -L${AQSISHOME}/lib \
-        -laqsis_ri2rib
-}
-!win32:LIBS += -L../lua \
-    -llua \
+debug:LIBS += -L../build/debug \
+    -llua5 \
+    -L${AQSISHOME}/lib \
+    -laqsis_ri2rib
+release:LIBS += -L../build/release \
+    -llua5 \
     -L${AQSISHOME}/lib \
     -laqsis_ri2rib
 
