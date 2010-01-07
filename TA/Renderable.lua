@@ -229,6 +229,34 @@ function Disk:isEqual(other)
 	return false
 end
 
+Patch = Renderable:clone()
+Patch.renderop = "Patch"
+Patch.type = "bilinear"
+Patch.paramList = {}
+function Patch:__call(type, paramList)
+	local o = self:create()
+	o.type = type
+	o.paramList = paramList or {}
+	return o
+end
+function Patch:isEqual(other)
+	if not Renderable.isEqual(self, other) then
+		return false
+	elseif self.type == other.type and
+		   Renderable:isParamListEqual(self.paramList, other.paramList) then
+		return true
+	end
+	return false
+end
+function Patch:isEquivalent(other)
+	if not Renderable.isEquivalent(self, other) then
+		return false
+	elseif self.type == other.type and
+		   Renderable:isParamListEquivalent(self.paramList, other.paramList) then
+		return true
+	end
+	return false
+end
 
 PatchMesh = Renderable:clone()
 PatchMesh.renderop = "PatchMesh"

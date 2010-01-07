@@ -4,6 +4,8 @@
 #include <QSharedPointer>
 #include <QDir>
 #include <QFile>
+#include <QList>
+#include <QString>
 
 extern "C" {
 #include "lua.h"
@@ -22,6 +24,39 @@ int luaopen_ri(lua_State *L);
 #define QUOTEME(t) _QUOTEME(t)
 
 
+QList<QString> _stack;
+
+void FunctionHook(lua_State *l, lua_Debug *ar)
+{
+    //fill up the debug structure with information from the lua stack
+    lua_getinfo(l, "Sln", ar);
+    //push function calls to the top of the callstack
+    if (ar->event == LUA_HOOKCALL)
+    {
+        QString ss = QString("%1:%2: %3 (%4)").arg(ar->short_src).
+                                                 arg(ar->currentline).
+                                                 arg((ar->name == NULL ? "[UNKNOWN]" : ar->name)).
+                                                 arg(ar->namewhat);
+        _stack.prepend(ss);
+    }
+    //pop the returned function from the callstack
+    else if (ar->event ==LUA_HOOKRET)
+    {
+        if (!_stack.isEmpty())
+            _stack.removeFirst();
+    }
+}
+
+
+QString stackTrace()
+{
+    QString traceback;
+    QList<QString>::iterator i;
+    for(i = _stack.begin(); i != _stack.end(); ++i)
+        traceback.append(*i).append("\n");
+    return traceback;
+}
+
 static int pmain (lua_State *L)
 {
     //struct Smain *s = (struct Smain *)lua_touserdata(L, 1);
@@ -36,6 +71,8 @@ static int pmain (lua_State *L)
         luaopen_luaglu(L);
         luaopen_ri(L);
         lua_gc(L, LUA_GCRESTART, 0);
+
+        lua_sethook(L, &FunctionHook, LUA_MASKCALL | LUA_MASKRET, 0);
 
         // Setup package.cpath to find our extensions.
         lua_getglobal(L, "package");
