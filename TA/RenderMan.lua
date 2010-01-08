@@ -51,6 +51,9 @@ function RenderMan:create(name)
 	function tab:Disk(framestate, pass)
 		ri.Disk(self.height, self.radius, self.thetamax)
 	end
+	function tab:Patch(framestate,pass)
+		ri.Patch(self.type, self.paramList)
+	end
 	function tab:PatchMesh(framestate, pass)
 		ri.PatchMesh(self.type, self.nu, self.uwrap, self.nv, self.vwrap, self.paramList)
 	end

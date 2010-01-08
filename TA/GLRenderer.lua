@@ -198,6 +198,52 @@ function bicubicPatch(mpu, mpv, cpX, cpY, cpZ)
 	gl.End()
 end
 
+
+
+function bilinearPatch(cpX, cpY, cpZ)
+	local count = 10
+
+	local fpX = {}
+	local fpY = {}
+	local fpZ = {}
+	for i = 0, count do
+		fpX[i+1] = {}
+		fpY[i+1] = {}
+		fpZ[i+1] = {}
+	end
+  
+	for i = 0, count do
+		local u = i/count
+		local px1 = ((cpX[1][2] - cpX[1][1]) * u) + cpX[1][1]
+		local px2 = ((cpX[2][2] - cpX[2][1]) * u) + cpX[2][1]
+		local py1 = ((cpY[1][2] - cpY[1][1]) * u) + cpY[1][1]
+		local py2 = ((cpY[2][2] - cpY[2][1]) * u) + cpY[2][1]
+		local pz1 = ((cpZ[1][2] - cpZ[1][1]) * u) + cpZ[1][1]
+		local pz2 = ((cpZ[2][2] - cpZ[2][1]) * u) + cpZ[2][1]
+
+		for j = 0, count do
+			local v = j/count
+
+			fpX[i+1][j+1] = ((px2 - px1) * v) + px1
+			fpY[i+1][j+1] = ((py2 - py1) * v) + py1
+			fpZ[i+1][j+1] = ((pz2 - pz1) * v) + pz1
+		end
+	end
+
+	-- Calculate normals here.
+    
+	gl.Begin('QUADS')
+	for i = 1, count do
+		for j = 1, count do
+			gl.Vertex(fpX[i][j], fpY[i][j], fpZ[i][j])
+			gl.Vertex(fpX[i+1][j], fpY[i+1][j], fpZ[i+1][j])
+			gl.Vertex(fpX[i+1][j+1], fpY[i+1][j+1], fpZ[i+1][j+1])
+			gl.Vertex(fpX[i][j+1], fpY[i][j+1], fpZ[i][j+1])
+		end
+	end
+	gl.End()
+end
+
 GLRenderer = Object:clone()
 GLRenderer.mode = 'LINES'
 
@@ -296,22 +342,41 @@ function GLRenderer:create(name)
 		partialDisk(self.radius, 0, self.thetamax, self.height)
 	end
 	function tab:Patch(framestate, pass)
-		local pX = {}
-		local pY = {}
-		local pZ = {}
-		local index = 1
-		for i = 1, 4 do
-			pX [i] = {}
-			pY [i] = {}
-			pZ [i] = {}
-			for j = 1, 4 do
-				pX[i][j] = self.paramList["P"][index]
-				pY[i][j] = self.paramList["P"][index+1]
-				pZ[i][j] = self.paramList["P"][index+2]
-				index = index + 3
+		if self.type == "bicubic" then
+			local pX = {}
+			local pY = {}
+			local pZ = {}
+			local index = 1
+			for i = 1, 4 do
+				pX [i] = {}
+				pY [i] = {}
+				pZ [i] = {}
+				for j = 1, 4 do
+					pX[i][j] = self.paramList["P"][index]
+					pY[i][j] = self.paramList["P"][index+1]
+					pZ[i][j] = self.paramList["P"][index+2]
+					index = index + 3
+				end
 			end
+			bicubicPatch(bezier, bezier, pX, pY, pZ) 
+		else
+			local pX = {}
+			local pY = {}
+			local pZ = {}
+			local index = 1
+			for i = 1, 2 do
+				pX [i] = {}
+				pY [i] = {}
+				pZ [i] = {}
+				for j = 1, 2 do
+					pX[i][j] = self.paramList["P"][index]
+					pY[i][j] = self.paramList["P"][index+1]
+					pZ[i][j] = self.paramList["P"][index+2]
+					index = index + 3
+				end
+			end
+			bilinearPatch(pX, pY, pZ) 
 		end
-		bicubicPatch(bezier, bezier, pX, pY, pZ) 
 	end
 	function tab:PatchMesh(framestate, pass)
 		gl.Begin('TRIANGLES')         -- Drawing Using Triangles
