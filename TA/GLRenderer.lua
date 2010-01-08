@@ -105,32 +105,31 @@ bezier = matrix({ {-1, 3,-3, 1 },
 				  { 3,-6, 3, 0 }, 
 				  {-3, 3, 0, 0 }, 
 				  { 1, 0, 0, 0 } })
---[[
-float[][] mp0 = { {-1, 3,-3, 1 }, 
-				{ 3,-6, 3, 0 }, 
-				{-3, 3, 0, 0 }, 
-				{ 1, 0, 0, 0 } };
+				  
+catmull_rom = matrix({ {-0.5, 1.0,-0.5, 0.0 }, 
+					   { 1.5,-2.5, 0.0, 1.0 }, 
+					   {-1.5, 2.0, 0.5, 0.0 }, 
+					   { 0.5,-0.5, 0.0, 0.0 } })                 
+					   
+bspline = matrix({  {-1.0/6, 3.0/6,-3.0/6, 1.0/6 }, 
+					{ 3.0/6,-6.0/6,   0, 4.0/6 }, 
+					{-3.0/6, 3.0/6, 3.0/6, 1.0/6 }, 
+					{ 1.0/6,   0,   0,   0 } })
 
-float[][] mp1 = { {-0.5, 1.0,-0.5, 0.0 }, 
-			   { 1.5,-2.5, 0.0, 1.0 }, 
-			   {-1.5, 2.0, 0.5, 0.0 }, 
-			   { 0.5,-0.5, 0.0, 0.0 } };                 
+power = matrix({	{1, 0, 0, 0},
+					{0, 1, 0, 0},
+					{0, 0, 1, 0},
+					{0, 0, 0, 0} })
+					
+hermite = matrix({	{2, 1, -2,  1},
+					{-3, -2, 3, -1},
+					{0, 1, 0, 0},
+					{1, 0, 0, 0} })
 
-float[][] mp2 = { {-1.0/6, 3.0/6,-3.0/6, 1.0/6 }, 
-				{ 3.0/6,-6.0/6,   0, 4.0/6 }, 
-				{-3.0/6, 3.0/6, 3.0/6, 1.0/6 }, 
-				{ 1.0/6,   0,   0,   0 } };                   
-			   
-float[][] mp3 = { { 2,-3, 0, 1 }, 
-				{ 1,-2, 1, 0 }, 
-				{-2, 3, 0, 0 }, 
-				{ 1,-1, 0, 0 } }; 
-
-float[][] mp4 = { {-1,    1, -0.5, 2 }, 
-				{ 2.5, -2.5,    0, 0 }, 
-				{-3,    2,  0.5, 0 }, 
-				{ 1, -0.5,    0, 0 } };               
-]]--
+linear = matrix({	{0, 0, 0, 0},
+				    {0, 0, 0, 0},
+				    {0, -1, 1, 0},
+				    {0, 1, 0, 0} })
 
 function bicubicPatch(mpu, mpv, cpX, cpY, cpZ)
 	local count = 10
@@ -155,25 +154,25 @@ function bicubicPatch(mpu, mpv, cpX, cpY, cpZ)
   
 	for i = 0, count do
 		local u = i/count
-		local mu = matrix(4,1)
+		local mu = matrix(1,4)
 		mu[1][1] = math.pow(u,3)
-		mu[2][1] = math.pow(u,2)
-		mu[3][1] = u
-		mu[4][1] = 1
+		mu[1][2] = math.pow(u,2)
+		mu[1][3] = u
+		mu[1][4] = 1
 
-		mu = mput * mu
-		local mux = mu * px
+		mu = mu * mput
+		local mux = mu * px 
 		local muy = mu * py
-		local muz = mu * pz
+		local muz = mu * pz 
 
 		for j = 0, count do
 			local v = j/count
-			local mv = matrix(1,4)
+			local mv = matrix(4,1)
 			mv[1][1] = math.pow(v,3)
-			mv[1][2] = math.pow(v,2)
-			mv[1][3] = u
-			mv[1][4] = 1
-			mv = mv * mpv
+			mv[2][1] = math.pow(v,2)
+			mv[3][1] = v
+			mv[4][1] = 1
+			mv = mpv * mv
 
 			local x = mux * mv
 			local y = muy * mv
@@ -294,13 +293,6 @@ function GLRenderer:create(name)
 		partialSphere(self.radius, 0, self.thetamax, self.zmin, self.zmax)
 	end
 	function tab:Disk(framestate, pass)
---		local quad = glu.NewQuadric()
---        if GLRenderer.mode == 'LINES' then
---            glu.QuadricDrawStyle(quad, 'LINE')
---        else
---            glu.QuadricDrawStyle(quad, 'SOLID')
---        end
---        glu.Disk(quad, 0, self.radius, 12, 1)
 		partialDisk(self.radius, 0, self.thetamax, self.height)
 	end
 	function tab:Patch(framestate, pass)
@@ -313,9 +305,9 @@ function GLRenderer:create(name)
 			pY [i] = {}
 			pZ [i] = {}
 			for j = 1, 4 do
-				pX[j] = self.paramList["P"][index]
-				pY[j] = self.paramList["P"][index+1]
-				pZ[j] = self.paramList["P"][index+2]
+				pX[i][j] = self.paramList["P"][index]
+				pY[i][j] = self.paramList["P"][index+1]
+				pZ[i][j] = self.paramList["P"][index+2]
 				index = index + 3
 			end
 		end

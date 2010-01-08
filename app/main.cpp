@@ -72,7 +72,7 @@ static int pmain (lua_State *L)
         luaopen_ri(L);
         lua_gc(L, LUA_GCRESTART, 0);
 
-        lua_sethook(L, &FunctionHook, LUA_MASKCALL | LUA_MASKRET, 0);
+        //lua_sethook(L, &FunctionHook, LUA_MASKCALL | LUA_MASKRET, 0);
 
         // Setup package.cpath to find our extensions.
         lua_getglobal(L, "package");

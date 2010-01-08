@@ -34,8 +34,8 @@ void OpenGLWidget::paintGL()
     catch(std::exception & e)
     {
         std::cerr << e.what() << std::endl;
-        QString stack = stackTrace();
-        std::cerr << stack.toAscii().data() << std::endl;
+        //QString stack = stackTrace();
+        //std::cerr << stack.toAscii().data() << std::endl;
         // \todo: Want to output the message to the interface here, but if
         // I do, the render loop forces us into an infinite loop, so for now it
         // just goes to stderr.
