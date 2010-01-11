@@ -18,8 +18,11 @@ RenderCache:push()
 Renderable = Object:clone()
 function Renderable:create()
 	local o = self:clone()
-	table.insert(RenderCache:currentCache(), o)
+	o:inject()
 	return o
+end
+function Renderable:inject()
+	table.insert(RenderCache:currentCache(), self)
 end
 function Renderable:isEquivalent(other)
 	return self.renderop == other.renderop

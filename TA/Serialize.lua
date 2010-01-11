@@ -4,8 +4,12 @@ function fixupScene(model)
 			v.parent = model
 			if v.nodeType == "model" then
 				v = Model:clone(v)
+				-- Clear any cache
+				v.renderables = nil
 			elseif v.nodeType == "camera" then
 				v = Camera:clone(v)
+				-- Clear any cache
+				v.renderables = nil
 			end
 			for k,v in pairs(v.avars) do
 				v.model = model

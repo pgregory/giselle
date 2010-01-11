@@ -347,6 +347,8 @@ void DataManager::setNodeSourceFromRef(int nodeRef, const QString& source) throw
                 lua_pushvalue(L, -2);   // Push self.
                 lua_pushstring(L, p->source.toAscii()); // Push new body text.
                 lua_call(L, 2, 0);
+                lua_pushnil(L);
+                lua_setfield(L, -2, "renderables");
                 lua_pop(L, 1);  /* << item */
                 return 0;
             }

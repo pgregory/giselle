@@ -63,10 +63,10 @@ function Renderer:renderIt(options)
 			framestates[2] = { transforms = {}, cameraTransforms = {} }
 		end
 
+		local renderables = options.world:getRenderables(times)
 		-- Pass 1 : Prep transforms
 		do
 			-- World
-			renderables = options.world:getRenderables(times)
 			self:renderRenderables(renderables, times, framestates, 1, function(node) return Renderable.transformNodes[node.renderop] end)
 		end
 
@@ -74,7 +74,6 @@ function Renderer:renderIt(options)
 		do
 			-- Camera
 			if options.camera then
-				local renderables = options.camera:getRenderables(times)
 				self:renderRenderables(renderables, times, framestates, 2, function(node) return Renderable.cameraNodes[node.renderop] end)
 				-- Generate a ConcatTransform renderable, and render it to 
 				-- perform the necessary camera transform.
@@ -89,7 +88,6 @@ function Renderer:renderIt(options)
 		-- Pass 3 : Render
 		do
 			-- World
-			renderables = options.world:getRenderables(times)
 			self:renderRenderables(renderables, times, framestates, 3)
 		end
 		self:frameEnd()
@@ -105,39 +103,30 @@ end
 --]]
 function Renderer:renderRenderables(renderables, times, framestates, pass, filter)
 	for i,ro in ipairs(renderables[1]) do
-		--if ro.passes == nil or ro.passes[pass] then
-		if 1 then
-			if ro.group then
-				local subRenderables = {}
-				local f0 = ro:generate(times[1])
-				table.insert(subRenderables, f0)
+		if ro.renderop == "model" or ro.renderop == "camera" then
+			local subRenderables = ro:getRenderables(times)
+			self:renderRenderables(subRenderables, times, framestates, pass, filter)
+		else
+			if ( filter == nil or type(filter) ~= "function" ) or filter(ro) then
+				local same = true
 				for frame = 2, #renderables do
-					local fn = renderables[frame][i]:generate(times[frame])
-					table.insert(subRenderables, fn)
+					if not ro:isEquivalent(renderables[frame][i]) then
+						print("Error: the rob lists for frames 1 and " .. frame .. " aren't compatible")
+					end
+					if not ro:isEqual(renderables[frame][i]) then
+						same = false
+						break
+					end
 				end
-				self:renderRenderables(subRenderables, times, framestates, pass, filter)
-			else
-				if ( filter == nil or type(filter) ~= "function" ) or filter(ro) then
-					local same = true
+				if same then
+					self:render(ro, framestates[1], pass)
+				else
+					ri.MotionBegin(times)
+					self:render(ro, framestates[1])
 					for frame = 2, #renderables do
-						if not ro:isEquivalent(renderables[frame][i]) then
-							print("Error: the rob lists for frames 1 and " .. frame .. " aren't compatible")
-						end
-						if not ro:isEqual(renderables[frame][i]) then
-							same = false
-							break
-						end
+						self:render(renderables[frame][i], framestates[frame], pass)
 					end
-					if same then
-						self:render(ro, framestates[1], pass)
-					else
-						ri.MotionBegin(times)
-						self:render(ro, framestates[1])
-						for frame = 2, #renderables do
-							self:render(renderables[frame][i], framestates[frame], pass)
-						end
-						ri.MotionEnd()
-					end
+					ri.MotionEnd()
 				end
 			end
 		end

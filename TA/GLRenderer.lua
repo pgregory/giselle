@@ -1,5 +1,5 @@
 function partialSphere(radius, thetamin, thetamax, zmin, zmax)
-	local thetan = math.ceil(math.max(3, ((thetamax - thetamin)/360) * 18))
+	local thetan = math.ceil(math.max(3, ((thetamax - thetamin)/360) * 4))
 	local phimin = -90
 	local phimax = 90
 	if zmin > -radius then
@@ -8,7 +8,7 @@ function partialSphere(radius, thetamin, thetamax, zmin, zmax)
 	if zmax < radius then
 		phimax = math.deg(math.asin(zmax/radius))
 	end
-	local phin = math.ceil(math.max(3, ((phimax - phimin)/180) * 18))
+	local phin = math.ceil(math.max(3, ((phimax - phimin)/180) * 4))
 	local phi1 = math.rad(math.max(phimin, -90))
 	local phi2 = math.rad(math.min(phimax, 90))
 	local theta1 = math.rad(math.max(thetamin, 0)) 

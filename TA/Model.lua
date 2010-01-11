@@ -1,7 +1,5 @@
 Model = Renderable:clone()
 Model.nodeType = "model"
-Model.group = true 
-
 
 function Model:generate(time)
     Renderable:pushState()
@@ -12,12 +10,14 @@ function Model:generate(time)
 end 
 
 function Model:getRenderables(atTime)
-	local renderables = {}
-	for i,t in ipairs(atTime) do
-		local fn = self:generate(t)
-		table.insert(renderables, fn)
-	end
-	return renderables
+--	if self.renderables == nil then
+		self.renderables = {}
+		for i,t in ipairs(atTime) do
+			local fn = self:generate(t)
+			table.insert(self.renderables, fn)
+		end
+--	end
+	return self.renderables
 end
 
 function Model:avar(name, opts)
@@ -48,8 +48,9 @@ function Model:model(name)
 	o.children = {}
 	o.parent = self
 	o.nodeType = "model"
+	o.renderop = "model"
     function o:__call()
-        self:create()
+		self:inject()
     end
     self.children[name] = o
     return o
@@ -70,9 +71,11 @@ function Model:camera(name)
     o:setBody("Projection(\"perspective\", {fov = 45})")
 	o.passes = { true, true, false }
 	o.nodeType = "camera"
+	o.renderop = "camera"
 	o.parent = self
     function o:__call()
-        self:create()
+		self.renderables = nil
+		self:inject()
     end
     self.children[name] = o
 	Cameras[name] = o
@@ -118,27 +121,6 @@ end
 --[[
 Static utility functions
 ]]--
-
-function Model.new(name, parent)
-    if type(name) ~= "string" then
-        error("Must specify a name for a model")
-        return
-    end
-    local o = Model:clone()
-    -- Record where the model was generated from.
-    deb = debug.getinfo(2)
-    o.source = deb['short_src']
-    o.line = deb['currentline']
-    o.name = name
-    o.avars = {}
-    o.body = nil
-    function o:__call()
-        self:create()
-    end
-    parent.children[name] = o
-    return o
-end
-
 
 function Model.aim(from, to)
     if type(from) ~= "table" or type(to) ~= "table" then
