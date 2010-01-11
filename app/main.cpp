@@ -14,6 +14,7 @@ extern "C" {
 #include "lstate.h"
 #include "luagl.h"
 #include "luaglu.h"
+#include "luagl_extras.h"
 int luaopen_ri(lua_State *L);
 }
 
@@ -69,6 +70,7 @@ static int pmain (lua_State *L)
         luaL_openlibs(L);  /* open libraries */
         luaopen_luagl(L);
         luaopen_luaglu(L);
+        luaopen_luagl_extras(L);
         luaopen_ri(L);
         lua_gc(L, LUA_GCRESTART, 0);
 

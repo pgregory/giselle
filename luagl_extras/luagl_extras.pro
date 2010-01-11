@@ -4,25 +4,22 @@
 #
 #-------------------------------------------------
 
-QT       -= core gui
+QT       -= core
 QT       += opengl
 
-TARGET = luagl
+TARGET = luagl_extras
 TEMPLATE = lib
 INCLUDEPATH = ../lua
+INCLUDEPATH += ../luagl
 debug:DESTDIR = ../build/debug
 release:DESTDIR = ../build/release
 
-DEFINES += LUAGL_LIBRARY
+DEFINES += LUAGL_EXTRAS_LIBRARY
 debug:LIBS += -L../build/debug \
         -llua
 release:LIBS += -L../build/release \
         -llua
 
-SOURCES += luagl.cpp \
-           luaglu.cpp \
-           luagl_util.cpp
+SOURCES += luagl_extras.cpp 
 
-HEADERS += luagl.h\
-           luaglu.h \
-           luagl_util.h
+HEADERS += luagl_extras.h

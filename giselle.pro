@@ -3,5 +3,6 @@ SOURCES = .qmake.cache
 CONFIG = ordered
 SUBDIRS = lua \
           luagl \
+          luagl_extras \
           luari \
           app

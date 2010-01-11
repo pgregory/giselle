@@ -1,4 +1,5 @@
 Renderer = Object:clone()
+Renderer.nodecount = 0
 
 local function errmeta(name)
 	local meta = {}
@@ -12,11 +13,11 @@ local function errtable(name)
 end
 
 function Renderer:start(options)
-	print("Renderer Begin")
+	self.nodecount = 0
 end
 
 function Renderer:finish()
-	print("Renderer End")
+	io.stderr:write("Total nodes = "..self.nodecount.."\n")
 end
 
 function Renderer:format(xres, yres, aspect_ratio)
@@ -178,6 +179,7 @@ function Renderer:create(name)
 
 
 	function r:render(nn, framestate, pass)
+		self.nodecount = self.nodecount + 1
 		return tab[nn.renderop](nn, framestate, pass)
 	end
 	function tab:WorldBegin(framestate, pass)

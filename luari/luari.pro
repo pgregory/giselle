@@ -13,11 +13,11 @@ release:DESTDIR = ../build/release
 
 DEFINES += LUAGL_LIBRARY
 debug:LIBS += -L../build/debug \
-    -llua5 \
+    -llua \
     -L${AQSISHOME}/lib \
     -laqsis_ri2rib
 release:LIBS += -L../build/release \
-    -llua5 \
+    -llua \
     -L${AQSISHOME}/lib \
     -laqsis_ri2rib
 

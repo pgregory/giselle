@@ -6,15 +6,18 @@ TARGET = app
 TEMPLATE = app
 INCLUDEPATH = ../lua
 INCLUDEPATH += ../luagl
+INCLUDEPATH += ../luagl_extras
 debug:DESTDIR = ../build/debug
 release:DESTDIR = ../build/release
 debug:LIBS += -L../build/debug \
-    -llua5 \
+    -llua \
     -lluagl \
+    -lluagl_extras \
     -lluari
 release:LIBS += -L../build/release \
-    -llua5 \
+    -llua \
     -lluagl \
+    -lluagl_extras \
     -lluari
 SOURCES += main.cpp \
     mainwindow.cpp \

@@ -1,48 +1,3 @@
-function partialSphere(radius, thetamin, thetamax, zmin, zmax)
-	local thetan = math.ceil(math.max(3, ((thetamax - thetamin)/360) * 4))
-	local phimin = -90
-	local phimax = 90
-	if zmin > -radius then
-		phimin = math.deg(math.asin(zmin/radius))
-	end
-	if zmax < radius then
-		phimax = math.deg(math.asin(zmax/radius))
-	end
-	local phin = math.ceil(math.max(3, ((phimax - phimin)/180) * 4))
-	local phi1 = math.rad(math.max(phimin, -90))
-	local phi2 = math.rad(math.min(phimax, 90))
-	local theta1 = math.rad(math.max(thetamin, 0)) 
-	local theta2 = math.rad(math.min(thetamax, 360))
-	for j = 0, phin-1 do
-		local t1 = phi1 + j * (phi2 - phi1) / phin
-		local t2 = phi1 + (j + 1) * (phi2 - phi1) / phin
-		gl.Begin('QUAD_STRIP')
-		for i = 0, thetan do
-			local t3 = theta1 + i * (theta2 - theta1) / thetan
-
-			local ex = math.cos(t1) * math.cos(t3)
-			local ey = math.cos(t1) * math.sin(t3)
-			local ez = math.sin(t1)
-			local px = radius * ex
-			local py = radius * ey
-			local pz = radius * ez
-			gl.Normal(ex, ey, ez)
-			gl.TexCoord(i/thetan, j/phin)
-			gl.Vertex(px, py, pz)
-
-			ex = math.cos(t2) * math.cos(t3)
-			ey = math.cos(t2) * math.sin(t3)
-			ez = math.sin(t2)
-			px = radius * ex
-			py = radius * ey
-			pz = radius * ez
-			gl.Normal(ex, ey, ez)
-			gl.TexCoord(i/thetan, (j+1)/phin)
-			gl.Vertex(px, py, pz)
-		end
-		gl.End()
-	end
-end
 
 function partialCylinder(radius, thetamin, thetamax, zmin, zmax)
 	local thetan = math.ceil(math.max(3, ((thetamax - thetamin)/360) * 18))
@@ -336,7 +291,8 @@ function GLRenderer:create(name)
 		partialCylinder(self.radius, 0, self.thetamax, self.zmin, self.zmax)
 	end
 	function tab:Sphere(framestate, pass)
-		partialSphere(self.radius, 0, self.thetamax, self.zmin, self.zmax)
+		--partialSphere(self.radius, 0, self.thetamax, self.zmin, self.zmax)
+		gle.PartialSphere(self.radius, 0, self.thetamax, self.zmin, self.zmax)
 	end
 	function tab:Disk(framestate, pass)
 		partialDisk(self.radius, 0, self.thetamax, self.height)
@@ -445,6 +401,7 @@ function GLRenderer:create(name)
 	end
 
 	function r:start(options)
+		Renderer.start(self)
 		gl.Clear('COLOR_BUFFER_BIT,DEPTH_BUFFER_BIT') -- Clear Screen And Depth Buffer
 --		gl.Enable('LIGHTING')
 		gl.Light('LIGHT1', 'AMBIENT', {0.1, 0.1, 0.1, 1})
@@ -458,6 +415,7 @@ function GLRenderer:create(name)
 	end
 
 	function r:finish()
+		Renderer.finish(self)
     end
 
 	function r:format(options)
