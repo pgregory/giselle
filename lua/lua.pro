@@ -7,7 +7,6 @@ TARGET = lua
 TEMPLATE = lib
 debug:DESTDIR = ../build/debug
 release:DESTDIR = ../build/release
-VERSION = 5.1.4
 DEFINES += LUA_LIBRARY
 SOURCES += lzio.cpp \
     lvm.cpp \

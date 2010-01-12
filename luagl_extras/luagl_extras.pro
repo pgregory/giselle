@@ -16,9 +16,11 @@ release:DESTDIR = ../build/release
 
 DEFINES += LUAGL_EXTRAS_LIBRARY
 debug:LIBS += -L../build/debug \
-        -llua
+        -llua \
+        -lluagl
 release:LIBS += -L../build/release \
-        -llua
+        -llua \
+        -lluagl
 
 SOURCES += luagl_extras.cpp 
 

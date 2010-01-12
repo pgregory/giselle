@@ -81,7 +81,7 @@
      <x>0</x>
      <y>0</y>
      <width>815</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -169,9 +169,6 @@
        </attribute>
        <attribute name="verticalHeaderDefaultSectionSize">
         <number>18</number>
-       </attribute>
-       <attribute name="verticalHeaderVisible">
-        <bool>true</bool>
        </attribute>
       </widget>
      </item>
@@ -310,6 +307,9 @@
    </property>
    <property name="toolTip">
     <string>Accept changes to the items code</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Return</string>
    </property>
   </action>
   <action name="actionRender">
