@@ -2,6 +2,7 @@
 # Project created by QtCreator 2009-11-03T20:48:56
 # -------------------------------------------------
 QT += opengl
+CONFIG -= app_bundle
 TARGET = app
 TEMPLATE = app
 INCLUDEPATH = ../lua
@@ -12,13 +13,11 @@ release:DESTDIR = ../build/release
 debug:LIBS += -L../build/debug \
     -llua \
     -lluagl \
-    -lluagl_extras \
-    -lluari
+    -lluagl_extras
 release:LIBS += -L../build/release \
     -llua \
     -lluagl \
-    -lluagl_extras \
-    -lluari
+    -lluagl_extras
 SOURCES += main.cpp \
     mainwindow.cpp \
     avarlistmodel.cpp \

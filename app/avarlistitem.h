@@ -4,6 +4,7 @@
 #include <QPair>
 #include <QList>
 #include <QVector>
+#include <QVariant>
 
 extern "C" {
 #include "lua.h"

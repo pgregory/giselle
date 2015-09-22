@@ -1,4 +1,4 @@
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include "mainwindow.h"
 #include "datamanager.h"
 #include <QSharedPointer>
@@ -71,7 +71,7 @@ static int pmain (lua_State *L)
         luaopen_luagl(L);
         luaopen_luaglu(L);
         luaopen_luagl_extras(L);
-        luaopen_ri(L);
+        //luaopen_ri(L);
         lua_gc(L, LUA_GCRESTART, 0);
 
         //lua_sethook(L, &FunctionHook, LUA_MASKCALL | LUA_MASKRET, 0);
@@ -100,7 +100,7 @@ static int pmain (lua_State *L)
         // Load a simple test lua file for development purposes.
         //QDir dir(QUOTEME(ROOT_DIR));
         //QString testLua = dir.filePath("test2.lua");
-        //status = luaL_dofile(L, testLua.toAscii());
+        //status = luaL_dofile(L, testLua.toUtf8());
         //if(status != 0)
         //    throw(LuaError(L));
     }

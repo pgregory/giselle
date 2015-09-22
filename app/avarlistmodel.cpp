@@ -112,7 +112,7 @@ void AvarListModel::startFrameChanged(int start)
 {
     _startFrame = start;
     _maxColumns = (_endFrame-_startFrame)+1;
-    reset();
+    //reset();
     populateModel();
 }
 
@@ -121,7 +121,7 @@ void AvarListModel::endFrameChanged(int end)
 {
     _endFrame = end;
     _maxColumns = (_endFrame-_startFrame)+1;
-    reset();
+    //reset();
     populateModel();
 }
 

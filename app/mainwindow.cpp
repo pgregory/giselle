@@ -103,7 +103,7 @@ void MainWindow::selectModel(const QModelIndex &index)
         LuaEditor* editor = new LuaEditor();
         editor->setNodeRef(nodeRef);
         editor->setText(source);
-        ui->editorTabWidget->addTab(editor, name.toAscii());
+        ui->editorTabWidget->addTab(editor, name.toUtf8());
         ui->editorTabWidget->setCurrentWidget(editor);
 
         populateAvarView(nodeRef);

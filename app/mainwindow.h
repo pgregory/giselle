@@ -1,9 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtGui/QMainWindow>
-#include <QtGui/QSplitter>
-#include <QtGui/QTextEdit>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QSplitter>
+#include <QtWidgets/QTextEdit>
 #include <QtCore/QProcess>
 #include <QModelIndex>
 

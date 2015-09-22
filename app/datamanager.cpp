@@ -43,7 +43,7 @@ bool DataManager::refsEqual(int refa, int refb) throw(LuaError)
 
 void DataManager::runCommand(const QString& command) throw(LuaError)
 {
-    int res = luaL_dostring(m_L, command.toAscii());
+    int res = luaL_dostring(m_L, command.toUtf8());
     if(res != 0)
     {
         throw(LuaError(m_L));
@@ -60,7 +60,7 @@ void DataManager::saveData(const QString& filename) throw(LuaError)
         {
             C* p = static_cast<C*>(lua_touserdata(L, -1));
             lua_getglobal(L, "saveAll");        // saveAll
-            lua_pushstring(L, p->name.toAscii());// saveAll - name
+            lua_pushstring(L, p->name.toUtf8());// saveAll - name
             lua_call(L, 1, 0);                  // --
 
             return 0;
@@ -83,7 +83,7 @@ void DataManager::loadData(const QString& filename) throw(LuaError)
         {
             C* p = static_cast<C*>(lua_touserdata(L, -1));
             lua_getglobal(L, "loadAll");        // loadAll
-            lua_pushstring(L, p->name.toAscii());// loadAll - name
+            lua_pushstring(L, p->name.toUtf8());// loadAll - name
             lua_call(L, 1, 0);                  // table - result
             lua_getglobal(L, "World");          // World
             lua_pop(L, 1);                      // --
@@ -220,7 +220,7 @@ void DataManager::getKeyframesFromRef(int avarRef, QList<Keyframe>& kfs) throw(L
             QString locator = lua_tostring(L, -1);
             lua_pop(L, 1);                                  // avar - ExposureSheet
             lua_getfield(L, -1, "avars");                   // avar - ExposureSheet - avars
-            lua_getfield(L, -1, locator.toAscii());         // avar - ExposureSheet - avars - avar
+            lua_getfield(L, -1, locator.toUtf8());         // avar - ExposureSheet - avars - avar
 
             if(lua_isnil(L, -1))
             {
@@ -345,14 +345,14 @@ void DataManager::setNodeSourceFromRef(int nodeRef, const QString& source) throw
                 lua_rawgeti(L, LUA_REGISTRYINDEX, p->objref);
                 lua_getfield(L, -1, "setBody"); // Get the setBody function.
                 lua_pushvalue(L, -2);   // Push self.
-                lua_pushstring(L, p->source.toAscii()); // Push new body text.
+                lua_pushstring(L, p->source.toUtf8()); // Push new body text.
                 lua_call(L, 2, 0);
                 lua_pushnil(L);
                 lua_setfield(L, -2, "renderables");
                 lua_pop(L, 1);  /* << item */
                 return 0;
             }
-        } p = { source.toAscii(), nodeRef };
+        } p = { source.toUtf8(), nodeRef };
         int res = lua_cpcall(m_L, C::call, &p);
         if( res != 0)
         {
@@ -661,7 +661,7 @@ void DataManager::renderGL(int rendererRef, int frame, const QString& cameraName
             if(!p->cameraName.isEmpty())
             {
                 lua_getglobal(L, "Cameras");
-                lua_getfield(L, -1, p->cameraName.toAscii());
+                lua_getfield(L, -1, p->cameraName.toUtf8());
                 lua_setfield(L, -3, "camera");
                 lua_pop(L, 1);  // << Cameras
             }
