@@ -90,15 +90,15 @@ function Model:locator()
 	return l .. "/" .. self.name
 end
 
-function Model.find(...)
+function Model.locate(...)
 	local node
 	local locator
 	if select('#', ...) == 1 then
 		node = root
-		locator = ... 
+		locator = select(1, ...) 
 	elseif select('#', ...) == 2 then
-		node = ...
-		locator = select(1, ...)
+		node = select(1, ...)
+		locator = select(2, ...)
 	else
 		error("Invalid arguments to find")
 	end
@@ -107,14 +107,22 @@ function Model.find(...)
 		locator = string.sub(locator, 2)
 		node = root
 	end
-	for n in string.gmatch(locator, "(%w+)/?") do
-		if node.children[n] then
-			node = node.children[n]
+	for n in string.gmatch(locator, "([^/]+)/?") do
+		if n == ".." then
+			node = node.parent
+		elseif n == "." then
+			node = node
+		elseif node.children[n] then
+				node = node.children[n]
 		else
 			error("Invalid locator ("..locator..") node "..node.name.." doesn't have a child named "..n)
 		end
 	end
 	return node	
+end
+
+function Model:find(locator)
+	return Model.locate(self, locator)
 end
 
 
