@@ -43,3 +43,27 @@ HEADERS += mainwindow.h \
     luaeditor.h \
     datamanager.h
 FORMS += mainwindow.ui
+
+DISTFILES += \
+    TA/Avar.lua \
+    TA/Camera.lua \
+    TA/complex.lua \
+    TA/CoordinateFrame.lua \
+    TA/ExposureSheet.lua \
+    TA/GLRenderer.lua \
+    TA/init.lua \
+    TA/matrix.lua \
+    TA/Model.lua \
+    TA/Object.lua \
+    TA/Renderable.lua \
+    TA/Renderer.lua \
+    TA/RenderMan.lua \
+    TA/Serialize.lua \
+    TA/tablesave.lua \
+    TA/World.lua
+
+copydata.commands = $(COPY_DIR) $$PWD/TA $$DESTDIR/TA
+first.depends = $(first) copydata
+export(first.depends)
+export(copydata.commands)
+QMAKE_EXTRA_TARGETS += first copydata

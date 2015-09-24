@@ -83,9 +83,9 @@ static int pmain (lua_State *L)
         lua_pop(L, 1);
         luaL_buffinit(L, &b);
 #ifdef  _WIN32
-        luaL_addstring(&b, "../../?/init.lua;../../?.lua;");
+        luaL_addstring(&b, "../../?/init.lua;../../?.lua;./?/init.lua;");
 #else
-        luaL_addstring(&b, "../?/init.lua;../?.lua;");
+        luaL_addstring(&b, "../?/init.lua;../?.lua;./?/init.lua;");
 #endif
         luaL_addstring(&b, current);
         luaL_pushresult(&b);
